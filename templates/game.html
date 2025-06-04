@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ game['title'] }}</title>
+    <style>
+        body 
+        { 
+            font-family: 'Times New Roman'; margin: 0px; color: white;
+            background: url('{{ url_for("static", filename="Posters/poster_1.jpg") }}') no-repeat center center fixed;
+            background-size: cover;
+            position: relative;
+        }
+        body::before 
+        {
+            content: '';
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.7); /* adjust darkness here */
+            z-index: -1; /* keeps it behind everything */
+        }
+        .content 
+        {
+            position: relative;
+            z-index: 1;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .game-box 
+        {
+            background: rgba(221, 131, 14, 0.08); /* soft transparent box */
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px); /* optional glass effect */
+            margin-top: 40px;
+            display: flex;
+        }
+        .game-container { display: flex; gap: 20px; }
+        .cover img { max-width: 300px; border-radius: 10px; }
+        .info h1 { margin: 0; font-size: 2em; }
+        .slider { margin-top: 30px; display: flex; gap: 10px; overflow-x: auto; }
+        .slider img { height: 150px; border-radius: 6px; }
+        .lightbox-bg {display: none; position: fixed; z-index: 10; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.8); justify-content: center; align-items: center;}
+
+        .lightbox-bg img { max-height: 90vh; max-width: 90vw; border-radius: 8px;}
+        
+        .arrow { position: absolute; top: 50%; font-size: 3rem; color: white; cursor: pointer;
+            user-select: none; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 50%; transform: translateY(-50%);}
+        .arrow.left { left: 20px; }
+        .arrow.right { right: 20px; }
+    </style>
+</head>
+<body>
+    <div style="max-width: 1000px; margin: 0 auto;">
+        <div class="game-box">
+            <div class="cover">
+                <img src="{{ url_for('static', filename='Covers/' + game['title'] + '_Cover.jpg') }}" alt="{{ game['title'] }}" 
+                onclick="showCover(this.src)" style="cursor: pointer; margin:5px">
+            </div>
+            <div class="info">
+                <h1>{{ game['title'] }}</h1>
+                <p><strong>Release Date:</strong> {{ game['steam-release-date']}}</p>
+                <p><strong>Description:</strong> {{ game['wikipedia-summary']  | replace('\n','\\n')}}</p>
+            </div>
+        </div>
+        {% set screenshots = [] %}
+        {% for v in game['screenshots'] %}
+            {% set _ = screenshots.append('/static/Screenshots/' ~ v) %}
+        {% endfor %}
+        <div class="slider game-box">
+            {% for img in screenshots%}
+                <img src="{{ img }}" alt="{{ game['title'] }}" 
+                onclick="showLightbox({{ loop.index0 }})" style="cursor: pointer;">
+            {% endfor %}
+        </div>
+        <div class="lightbox-bg" id="coverbox">
+            <img id="coverbox-img" src="" alt="Preview">
+        </div>
+        <div class="lightbox-bg" id="lightbox">
+            <span class="arrow left" onclick="prevImage(event)">&#10094;</span>
+            <img id="lightbox-img" src="" alt="Preview">
+            <span class="arrow right" onclick="nextImage(event)">&#10095;</span>
+        </div>
+    </div>
+    
+</body>
+<script>
+    let currentIndex = 0;
+    const screenshots_test = {{screenshots | tojson | safe}};
+    function showCover(src) {
+        const lightbox = document.getElementById('coverbox');
+        const img = document.getElementById('coverbox-img');
+        img.src = src;
+        lightbox.style.display = 'flex';
+    }
+
+    function showLightbox(index = 0) 
+    {
+        currentIndex = index;
+        const lightbox = document.getElementById('lightbox');
+        const img = document.getElementById('lightbox-img');
+        img.src = screenshots_test[currentIndex];
+        lightbox.style.display = 'flex';
+    }
+
+    function nextImage(e) {
+        e.stopPropagation();
+        currentIndex = (currentIndex + 1) % screenshots_test.length;
+        document.getElementById('lightbox-img').src = screenshots_test[currentIndex];
+    }
+
+    function prevImage(e) {
+        e.stopPropagation();
+        currentIndex = (currentIndex - 1 + screenshots_test.length) % screenshots_test.length;
+        document.getElementById('lightbox-img').src = screenshots_test[currentIndex];
+    }
+
+    document.getElementById('coverbox').onclick = () => {
+        document.getElementById('coverbox').style.display = 'none';
+    }
+    document.getElementById('lightbox').onclick = () => {
+        document.getElementById('lightbox').style.display = 'none';
+    }
+</script>
+</html>
