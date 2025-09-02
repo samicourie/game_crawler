@@ -1,0 +1,284 @@
+h1 {
+    margin: 5px;
+    text-align: center;
+    color:sandybrown;
+}
+h3 { margin: 0;}
+.content {display: flex; gap: 20px; margin-top: 30px;}
+
+.info-panel {
+    width: 25%;
+    text-align: left;
+    height: 90vh;
+    overflow-y: auto;
+}
+
+.info-panel img {
+    max-width: 100%;
+    border-radius: 12px;
+}
+
+.lightbox-bg {display: none; position: fixed; z-index: 10; top: 0; left: 0; width: 100%; height: 100%; 
+    background: rgba(0,0,0,0.8); justify-content: center; align-items: center;}
+
+.lightbox-bg img { max-height: 90vh; max-width: 90vw; border-radius: 8px;}
+
+.main-panel {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 20px;
+    border-radius: 16px;
+    backdrop-filter: blur(8px);
+    height: 65vh;
+    overflow-y: auto;
+}
+
+.main-panel::-webkit-scrollbar {
+    width: 8px;
+}
+
+.main-panel::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+}
+
+.panel {background: rgba(255, 255, 255, 0.05); padding: 15px; border-radius: 16px; backdrop-filter: blur(8px);}
+
+.score-panel {
+    width: 20%;
+}
+
+.widget-tabs {
+    display: flex;
+    flex-wrap: wrap; 
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.widget-tab {
+    background: rgba(255,255,255,0.1);
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: 8px;
+}
+
+.widget-tab.active {
+    background: rgba(255,255,255,0.3);
+    background-color: sandybrown;
+    font-weight: bold;
+    
+    border-radius: 6px;
+    padding: 6px;
+}
+
+.widget-content {
+    display: none;
+}
+
+.widget-content.active {
+    display: block;
+}
+
+.zero_margin {margin: 0px;}
+
+.image-slider {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding: 10px 0;
+    margin-top: 20px;
+    scroll-behavior: smooth;
+    position: relative;
+    z-index: 1;
+}
+
+.image-slider img {
+    height: 150px;
+    border-radius: 8px;
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.image-slider img:hover {
+    transform: scale(1.05);
+}
+
+.lightbox-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255,255,255,0.2);
+    color: white;
+    border: none;
+    font-size: 2rem;
+    padding: 8px 16px;
+    cursor: pointer;
+    z-index: 11;
+}
+
+#lightbox-prev {
+    left: 20px;
+}
+
+#lightbox-next {
+    right: 20px;
+}
+
+.lightbox-nav:hover {
+    background: rgba(255,255,255,0.4);
+}
+
+.score-row {
+  display: flex;
+  justify-content: space-between; /* pushes label left and score right */
+  max-width: 85%; /* adjust as needed */
+  margin-bottom: 2vh;
+  margin-top: 2vh;
+}
+
+.score-logo {
+  width: 24px;                   /* adjust size */
+  height: 24px;
+  border-radius: 50%;            /* makes it round */
+  object-fit: cover;             /* ensures it doesn’t stretch */
+  margin-right: 8px;
+}
+
+.score-label {
+  flex: 1;
+  text-align: left;
+}
+
+.score-box {
+  min-width: 60px; /* keeps them aligned */
+  text-align: center;
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: white;
+}
+
+.score-histogram {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 140px;
+  padding: 10px;
+}
+
+.bar {
+  width: 24px;
+  border-radius: 4px 4px 0 0;
+  transition: height 0.3s ease;
+  position: relative;
+  cursor: pointer;
+  background: sandybrown;
+}
+
+.bar:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #222;
+  color: #fff;
+  padding: 4px 8px;
+  font-size: 12px;
+  white-space: nowrap;
+  border-radius: 4px;
+  margin-bottom: 6px;
+  z-index: 10;
+}
+
+.achievements {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* 2 per row by default */
+  gap: 16px;
+}
+
+.achievement {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border-radius: 12px;
+  background-color: rgb(105, 105, 105, 0.5);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.achievement-icon {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 50%;
+  margin-right: 12px;
+}
+
+.achievement-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.achievement-percentage {
+  font-weight: bold;
+  font-size: 17px;
+  color: white;
+}
+
+.achievement-name {
+  font-weight: bold;
+  font-size: 20px;
+  color: sandybrown;
+}
+
+.achievement-text {
+  font-weight: bold;
+  font-size: 17;
+  color: white;
+  margin: 2px 0 0;
+}
+
+/* 🔽 Responsive: 1 per row on small screens */
+@media (max-width: 600px) {
+  .achievements {
+    grid-template-columns: 1fr;
+  }
+}
+
+.achievement-special {
+  grid-column: 1 / -1; /* span full width of grid */
+  background-color: rgb(244, 164, 96, 0.8);
+}
+
+.achievement-name-sp {
+  color: white;
+  font-size: 25px;
+}
+
+.widget-plus {
+  display: flex;
+  justify-content: space-between; /* pushes label left and score right */
+  max-width: 85%; /* adjust as needed */
+}
+
+.barplot-row {
+  display: flex;
+  align-items: center;   /* vertical center */
+  justify-content: center; /* horizontal center */            /* space between image and text */
+  margin-top: 40px;
+}
+
+.edit-link {
+  font-size: 0.8em;
+  color: sandybrown;
+  text-decoration: none;
+  margin-left: 10px;
+}
+
+.edit-link:hover {
+  color: darkcyan;
+}
+
+.crawl-url
+{
+  margin: 10px 0 10px 0;
+}

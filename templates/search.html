@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/x-icon" href="static/logo.png">
+    <title>Advanced Search</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.5/awesomplete.min.css" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/search.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/base.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.5/awesomplete.min.js"></script>
+
+</head>
+<body>
+    <!-- Header -->
+    {% include "header.html" %}
+
+    <!-- Advanced Search Panel -->
+    <div class="content">
+        <div class="panel search-panel">
+            <h1>Advanced Search</h1>
+            <form method="POST" action="/search">
+                <!-- Title -->
+                <div class="form-group">
+                    <label for="title">Title</label>
+                    <input name="title" id="title" class="orange_input" placeholder="Game title...">
+                </div>
+
+                <!-- Genres -->
+                <div class="form-group">
+                    <label for="genres">Genres</label>
+                    <div class="dropdown-multi">
+                        <input type="text" class="dropdown-search" placeholder="Search genres...">
+                        <div class="dropdown-options">
+                            {% for g in genres %}
+                            <label>
+                                <input type="checkbox" name="genres" value="{{ g }}">
+                                {{ g }}
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Developers -->
+                <div class="form-group">
+                    <label for="developers">Developers</label>
+                    <input type="text" name="developers" id="developers" class="orange_input" placeholder="Search developers...">
+                </div>
+
+                <!-- Publishers -->
+                <div class="form-group">
+                    <label for="publishers">Publishers</label>
+                    <input type="text" name="publishers" id="publishers" class="orange_input" placeholder="Search publishers...">
+                </div>
+
+                <!-- Release Date -->
+                <div class="form-group-inline">
+                    <label>Release Date</label>
+                    <input type="date" name="release_start">
+                    <span>to</span>
+                    <input type="date" name="release_end">
+                </div>
+
+                <!-- Retro -->
+                <div class="form-group">
+                    <label><input type="checkbox" name="retro"> Retro</label>
+                </div>
+
+                <div class="form-group-inline">
+                    <div class="score-field">
+                        <label for="score_min">Min Score (0–100)</label>
+                        <input type="number" name="score_min" id="score_min" min="0" max="100" class="orange_input">
+                    </div>
+                    <div class="score-field">
+                        <label for="score_max">Max Score (0–100)</label>
+                        <input type="number" name="score_max" id="score_max" min="0" max="100" class="orange_input">
+                    </div>
+                </div>
+
+                <!-- Backloggd split rating -->
+                <div class="form-group">
+                    <label for="backloggd">Dominant Backloggd Rating</label>
+                    <select name="backloggd" id="backloggd">
+                        <option value="">-- Any --</option>
+                        {% for r in [0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0] %}
+                            <option value="{{ r }}">{{ r }} ★</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Game Time -->
+                <div class="form-group-inline">
+                    <label>HLTB Time</label>
+                    <select name="hltb_mode">
+                        <option value="less">Less than</option>
+                        <option value="more">More than</option>
+                    </select>
+                    <input type="number" name="hltb_hours" placeholder="Hours" class="orange_input">
+                </div>
+
+                <button type="submit" class="search-btn">Search</button>
+            </form>
+        </div>
+
+        <!-- Results Grid -->
+        <div class="panel results-panel">
+            <h2 style="margin: 0;">Results</h2>
+            <div class="pagination">
+                {% if page > 1 %}
+                    <a href="{{ url_for('search', page=page-1, **current_args) }}">« Prev</a>
+                {% endif %}
+
+                <span>Page {{ page }} of {{ total_pages }}</span>
+
+                {% if page < total_pages %}
+                    <a href="{{ url_for('search', page=page+1, **current_args) }}">Next »</a>
+                {% endif %}
+
+                <input id="pageInput_1" type="number" name="page" class="orange_input" style="width: 5ch;" min="{{1}}" max="{{total_pages}}">
+                <a href="#" id="goButton_1">Go »</a>
+            </div>
+            <div class="results-grid">
+                {% for game in results %}
+                <div class="result-card">
+                    <h3>
+                        <a href="/game/{{ game['title'] }}">
+                        <img src="{{ url_for('static', filename=game['cover']) }}" alt="{{ game['title'] }} Cover">
+                    {{ game['title'] }}</a></h3>
+                    {% if 'Release Date' in game and game['Release Date'] %}
+                        <p class="release-date">{{ game['Release Date'][0] }}</p>
+                    {% endif %}
+                    
+                </div>
+                {% endfor %}
+            </div>
+            <div class="pagination">
+                {% if page > 1 %}
+                    <a href="{{ url_for('search', page=page-1, **current_args) }}">« Prev</a>
+                {% endif %}
+
+                <span>Page {{ page }} of {{ total_pages }}</span>
+
+                {% if page < total_pages %}
+                    <a href="{{ url_for('search', page=page+1, **current_args) }}">Next »</a>
+                {% endif %}
+
+                <input id="pageInput_2" type="number" name="page" class="orange_input" style="width: 5ch;" min="{{1}}" max="{{total_pages}}">
+                <a href="#" id="goButton_2">Go »</a>
+            </div>
+        </div>
+
+    </div>
+
+  <script>
+        document.querySelectorAll('.dropdown-multi').forEach(dropdown => {
+            const searchInput = dropdown.querySelector('.dropdown-search');
+            const options = dropdown.querySelectorAll('.dropdown-options label');
+
+            searchInput.addEventListener('keyup', function() {
+                const filter = this.value.toLowerCase();
+                options.forEach(opt => {
+                    const text = opt.innerText.toLowerCase();
+                    opt.style.display = text.includes(filter) ? '' : 'none';
+                });
+            });
+        });
+
+        const pageInput_1 = document.getElementById('pageInput_1');
+        const pageInput_2 = document.getElementById('pageInput_2');
+        const goButton_1 = document.getElementById('goButton_1');
+        const goButton_2 = document.getElementById('goButton_2');
+
+        goButton_1.addEventListener('click', function(e) {
+            e.preventDefault(); // stop default link behavior
+            let pageValue = parseInt(pageInput_1.value) || 1; // default to 1 if empty
+            // clamp the value to valid range
+            if (pageValue < 1) pageValue = 1;
+            if (pageValue > {{ total_pages }}) pageValue = {{ total_pages }};
+            // navigate to URL with the chosen page
+            const baseUrl = "{{ url_for('search', **current_args) | safe }}";
+            const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + "page=" + pageValue;
+            window.location.href = url;
+        });
+
+        goButton_2.addEventListener('click', function(e) {
+            e.preventDefault(); // stop default link behavior
+            let pageValue = parseInt(pageInput_2.value) || 1; // default to 1 if empty
+            // clamp the value to valid range
+            if (pageValue < 1) pageValue = 1;
+            if (pageValue > {{ total_pages }}) pageValue = {{ total_pages }};
+
+            // preserve current args from backend
+            const baseUrl = "{{ url_for('search', **current_args) | safe }}";
+            const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + "page=" + pageValue;
+            window.location.href = url;
+        });
+  </script>
+  <script src="{{ url_for('static', filename='scripts/base.js') }}"></script>
+</body>
+</html>

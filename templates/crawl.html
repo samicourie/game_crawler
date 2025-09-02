@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/x-icon" href="../static/logo.png">
+    <title>{{ game['title'] }}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.5/awesomplete.min.css" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/game_page.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/base.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.5/awesomplete.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+</head>
+<body>
+    <!-- Header -->
+    {% include "header.html" %}
+    
+    <div class="content">
+        <!-- Left: Cover & Info -->
+        <div class="panel info-panel" style="width:20%">
+            <h1>{{ game['title'] }}</h1>
+            <img src="{{ url_for('static', filename=game['cover']) }}" alt="{{ game['title'] }} Cover" 
+                onclick="showCover(this.src)" style="cursor: pointer; margin:5px" loading="lazy">
+        </div>
+        <div class="panel info-panel" style="width:25%">
+            <h3 style="margin-bottom: 10px;">Crawl Inputs</h3>
+            <div id="crawl-inputs">
+                <div class="crawl-row">
+                    <select class="crawl-site">
+                        <option value="backloggd">Backloggd</option>
+                        <option value="gamesdb">GamesDB</option>
+                        <option value="giantbomb">GiantBomb</option>
+                        <option value="hltb">HLTB</option>
+                        <option value="igdb">IGDB</option>
+                        <option value="metacritics">Metacritics</option>
+                        <option value="moby">Moby</option>
+                        <option value="psnprofiles">PSNProfiles</option>
+                        <option value="rawg">RAWG</option>
+                        <option value="steam">Steam</option>
+                        <option value="wikipedia">Wikipedia</option>
+                    </select>
+                    <input type="text" class="orange_input crawl-url" placeholder="Enter website URL">
+                </div>
+            </div>
+            <button id="add-input">+ Add Another URL</button>
+            <button id="crawl-btn">Crawl</button>
+        </div>
+        <div class="panel info-panel" style="width:55%">
+            <h3>Results</h3>
+            <pre id="results">{ }</pre>
+        </div>
+
+        <div class="lightbox-bg" id="coverbox">
+            <img id="coverbox-img" src="" alt="Preview">
+        </div>
+    </div>
+
+    <script>
+        
+        $(document).ready(function() 
+        {
+            // Add new input + select row
+            $("#add-input").on("click", function() {
+                $("#crawl-inputs").append(`
+                <div class="crawl-row">
+                    <select class="crawl-site">
+                        <option value="backloggd">Backloggd</option>
+                        <option value="gamesdb">GamesDB</option>
+                        <option value="giantbomb">GiantBomb</option>
+                        <option value="hltb">HLTB</option>
+                        <option value="igdb">IGDB</option>
+                        <option value="metacritics">Metacritics</option>
+                        <option value="moby">Moby</option>
+                        <option value="psnprofiles">PSNProfiles</option>
+                        <option value="rawg">RAWG</option>
+                        <option value="steam">Steam</option>
+                        <option value="wikipedia">Wikipedia</option>
+                    </select>
+                    <input type="text" class="crawl-url orange_input" placeholder="Enter website URL">
+                </div>
+                `);
+            });
+
+            // Crawl button
+            $("#crawl-btn").on("click", function() {
+                let entries = [];
+                $(".crawl-row").each(function() {
+                    let site = $(this).find(".crawl-site").val();
+                    let url  = $(this).find(".crawl-url").val().trim();
+                    if (url) {
+                        entries.push({ site: site, url: url });
+                    }
+                });
+
+                if (entries.length === 0) {
+                    alert("Please enter at least one site + URL.");
+                    return;
+                }
+
+                // AJAX to Flask backend
+                $.ajax(
+                {
+                    url: "/crawl",
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify({ entries: entries }),
+                    success: function(response) {
+                        $("#results").text(JSON.stringify(response, null, 2));
+                    },
+                    error: function(err) {
+                        $("#results").text("Error: " + err.responseText);
+                    }
+                });
+            });
+        });
+
+        const lightbox = document.getElementById('coverbox');
+
+        lightbox.onclick = (e) => {
+            // Close only if background is clicked (not image or buttons)
+            if (e.target === lightbox) {
+                lightbox.style.display = 'none';
+                currentIndex = -1;
+            }
+        };
+
+        function showCover(src) 
+        {
+            const lightbox = document.getElementById('coverbox');
+            const img = document.getElementById('coverbox-img');
+            img.src = src;
+            lightbox.style.display = 'flex';
+        }
+
+        document.getElementById('coverbox').onclick = () => 
+        {
+            document.getElementById('coverbox').style.display = 'none';
+        }
+    </script>
+    <script src="{{ url_for('static', filename='scripts/base.js') }}"></script>
+</body>
+</html>

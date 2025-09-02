@@ -63,3 +63,6 @@ class RiotCrawler(Crawler):
 
     def get_api_info(self, title):
         return super().get_api_info(title)
+
+    def get_raw_info(self, url):
+        return super().get_raw_info(url)

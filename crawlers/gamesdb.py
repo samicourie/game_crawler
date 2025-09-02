@@ -18,7 +18,7 @@ class GamesDBCrawler(Crawler):
                           'Sony Playstation 2', 'Sony Playstation 3', 'Sony Playstation 4', 'Sony Playstation 5', 'Sony PSP', 
                           'Super Nintendo Entertainment System', 'Windows']
 
-    def get_url(self, title):
+    def get_url(self, title, year=None):
         temp_title = title
         score = 0
         url = ''
@@ -42,7 +42,8 @@ class GamesDBCrawler(Crawler):
             temp_title = candidates[best_candidate[0]]
             score = best_candidate[1]
             url = self.details_gamesdb + str(keys[best_candidate[0]]) + '-' + temp_title.lower().replace(' ', '-')
-            success = True
+            if score >= self.accepted_score:
+                success = True
         except Exception as _:
             pass
 
@@ -88,3 +89,6 @@ class GamesDBCrawler(Crawler):
     
     def get_api_info(self, title):
         return super().get_api_info(title)
+    
+    def get_raw_info(self, url):
+        return super().get_raw_info(url)

@@ -1,3 +1,4 @@
+import zlib
 import json
 from crawlers.crawler import Crawler
 from util.utility import get_soup, get_best_match
@@ -8,7 +9,7 @@ class MobyCrawler(Crawler):
         super().__init__()
         self.base_moby = 'https://www.mobygames.com/search/?q='
 
-    def get_url(self, title):
+    def get_url(self, title, year=None):
         temp_title = title
         # score, edist_score = 0, 0
         # url, edist_url = '', ''
@@ -23,16 +24,29 @@ class MobyCrawler(Crawler):
             table_elem = soup.find_all('table')[0]
             search_results = table_elem.find_all('b')
             candidates = []
+            candidates_years = []
             for result in search_results:
                 search_title = result.text
                 urls.append(result.find('a').attrs['href'])
                 candidates.append(search_title)
+                year_spans = result.parent.find_all('span')
+                try:
+                    if len(year_spans) > 1:
+                        if ',' in year_spans[1].text:
+                            candidates_years.append(int(year_spans[1].text.split(', ')[1].replace(')', '')))
+                        else:
+                            candidates_years.append(int(year_spans[1].text[1:].replace(')', '')))
+                    else:
+                        candidates_years.append(0)
+                except Exception as _:
+                    candidates_years.append(0)
 
-            best_candidate = get_best_match(candidates, title)
+            best_candidate = get_best_match(candidates, title, title_year=year, candidates_years=candidates_years)
             temp_title = candidates[best_candidate[0]]
             score = best_candidate[1]
             url = urls[best_candidate[0]]
-            success = True
+            if score >= self.accepted_score:
+                success = True
         except Exception as _:
             pass
 
@@ -103,8 +117,10 @@ class MobyCrawler(Crawler):
                     description = soup.find('section', {'id': 'gameOfficialDescription'}).text.replace('\n\n', '\n').strip()
                 except AttributeError as _:
                     description = soup.find('section', {'id': 'gameDescription'}).text.replace('\n\n', '\n').strip()
-                
+                    
                 json_obj['moby-description'] = description
+                # json_obj['moby-raw'] = zlib.compress(self.get_raw_info(soup).encode('utf-8'))
+                json_obj['moby-raw'] = self.get_raw_info(soup)
 
                 tags_elem = soup.find('section', {'id': 'gameGroups'})
                 tags_li = tags_elem.find_all('li')
@@ -119,11 +135,56 @@ class MobyCrawler(Crawler):
                         reviews_dict[journal] = []
                     reviews_dict[journal].append({'review': review['citation'], 'score': review['normalized_score']}) 
                 json_obj['moby-reviews'] = reviews_dict
+
+                images = self.get_moby_screenshots(url)
+                if images and len(images) > 0:
+                    json_obj['moby-screenshots'] = images
+
                 json_obj['moby-success'] = True
         except Exception as _:
             pass
 
         return json_obj
 
+    def get_moby_screenshots(self, url):
+        temp_url = url + '/screenshots/'
+        soup = get_soup(temp_url, cloud_scrapper=True)
+        images = []
+        
+        sc_div = soup.find('div', {'class': 'img-holder mb'})
+        if sc_div:
+            figures = sc_div.find_all('figure')
+            try:
+                for fig in figures:
+                    images.append({'url': fig.find('img').attrs['src'].replace('.webp', '.jpg'), 'caption': fig.find('figcaption').text.strip()})
+            except Exception as _:
+                pass
+        return images
+
+
     def get_api_info(self, title):
         return super().get_api_info(title)
+    
+    def get_raw_info(self, soup):
+        success = False
+        raw_info = ''
+
+        try:
+            description_section = soup.find('section', {'id': 'gameDescription'})
+            raw_info = ' '.join([str(v) for v in description_section.contents])
+            success = True
+        except Exception as _:
+            pass
+
+        if not success:
+            try:
+                
+                arrow_elem = soup.find('summary', {'class': 'no-select text-bold'})
+                if arrow_elem is not None:
+                    arrow_elem.decompose()
+                raw_info = ' '.join([str(v) for v in soup.find('details', {'class': 'mb'}).contents])
+                success = True
+                
+            except Exception as _:
+                pass
+        return raw_info

@@ -1,4 +1,5 @@
 import re
+import zlib
 from crawlers.crawler import Crawler
 from util.utility import get_soup, get_best_match
 
@@ -8,7 +9,7 @@ class SteamCrawler(Crawler):
         super().__init__()
         self.base_url = 'https://store.steampowered.com/search/?term='
 
-    def get_url(self, title):
+    def get_url(self, title, year=None):
         temp_title = title
         # score, edist_score = 0, 0
         score = 0
@@ -19,21 +20,29 @@ class SteamCrawler(Crawler):
             
             new_title = title.replace(' ', '+')
             url = self.base_url + new_title
-            soup = get_soup(url)
+            soup = get_soup(url, steam=True)
             urls = []
             search_results = soup.find_all('a', {'class':
                                                     ['search_result_row ds_collapse_flag', 'app_impression_tracked']})[:10]
             candidates = []
+            candidates_years = []
             for result in search_results:
                 search_title = result.find('span', {'class': 'title'}).text
                 urls.append(result.attrs['href'])
                 candidates.append(search_title)
 
-            best_candidate = get_best_match(candidates, title)
+                try:
+                    release_year = result.find('div', {'class': 'search_released'}).text.split(', ')[1].strip()
+                    candidates_years.append(int(release_year) if release_year.isdigit() else 0)
+                except Exception as _:
+                    candidates_years.append(0)
+
+            best_candidate = get_best_match(candidates, title, title_year=year, candidates_years=candidates_years)
             temp_title = candidates[best_candidate[0]]
             score = best_candidate[1]
             url = urls[best_candidate[0]]
-            success = True
+            if score >= self.accepted_score:
+                success = True
             # best_edist_candidate = get_best_edit_distance(candidates, title)
             # edist_url = urls[best_edist_candidate[0]]
             # edist_score = best_edist_candidate[1]
@@ -50,6 +59,7 @@ class SteamCrawler(Crawler):
         steam_score = float(score)
 
         steam_description = '#'
+        steam_raw = '#'
         steam_summary = '#'
         steam_critics = ''
         steam_tags = '#'
@@ -76,6 +86,8 @@ class SteamCrawler(Crawler):
 
                 steam_summary = soup.find('div', {'id': 'aboutThisGame'})
                 if steam_summary is not None:
+                    # steam_raw = zlib.compress(str(steam_summary).encode('utf-8'))
+                    steam_raw = str(steam_summary)
                     steam_summary = steam_summary.text
                     steam_summary = steam_summary.replace('\r', ' ')
                     steam_summary = steam_summary.replace('\t', ' ')
@@ -122,9 +134,20 @@ class SteamCrawler(Crawler):
             except Exception as _:
                 pass
         
-        return {'steam-description': steam_description, 'steam-summary': steam_summary, 'steam-tags': steam_tags,
+        return {'steam-description': steam_description, 'steam-summary': steam_summary, 'steam-tags': steam_tags, 'steam-raw': steam_raw,
                 'steam-genres': steam_genres, 'steam-positive': steam_critics, 'steam-images': steam_images, 'steam-success': success,
                 'steam-nb-users': steam_nb_users, 'steam-release-date': date, 'steam-developers': developers_list}
 
     def get_api_info(self, title):
         return super().get_api_info(title)
+    
+    def get_raw_info(self, url):
+        success = False
+        raw_info = ''
+        try:
+            soup = get_soup(url, steam=True)
+            raw_info = str(soup.find('div', {'id': 'aboutThisGame'}))
+            success = True
+        except Exception as _:
+            pass
+        return {'steam-raw': raw_info, 'steam-success': success}

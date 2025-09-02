@@ -1,0 +1,19 @@
+<div class="top-bar">
+    <!-- Navbar -->
+    <button class="openbtn" onclick="toggleSidebar()">☰</button>
+
+    <!-- Sidebar -->
+    <div id="mySidebar" class="sidebar">
+        <a href="/search">Advance Search</a>
+        <a href="about.html">About</a>
+        <a href="services.html">Services</a>
+        <a href="contact.html">Contact</a>
+    </div>
+    
+    <div class="logo">
+        <a href="/" class="logo-link"><img style='height: 40px;' src="{{ url_for('static', filename='logo.png') }}"></a>
+    </div>
+    <div class="search-wrapper">
+        <input id="search-input" placeholder="Search games..." class="orange_input" autocomplete="off">
+    </div>
+</div>

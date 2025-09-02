@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/x-icon" href="static/logo.png">
+    <title>Game Library</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.5/awesomplete.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.5/awesomplete.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/home.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/base.css') }}">
+
+</head>
+<body>
+    <!-- Header -->
+    {% include "header.html" %}
+    
+    <div class="content">
+
+        <div class="panel">
+            <h1>Game Library</h1>
+
+            <!-- Alphabet Filter -->
+            <div class="alphabet-bar">
+                {% for letter in '#ABCDEFGHIJKLMNOPQRSTUVWXYZ' %}
+                    <button onclick="showGamesByLetter('{{ letter }}')">{{ letter }}</button>
+                {% endfor %}
+                <button onclick="showGamesByLetter('#')">#</button>
+            </div>
+
+            <!-- Slider/Results container (always visible) -->
+            <div id="slider-section" class="slider-container">
+                {% for game in random_games %}
+                    <div class="game-card">
+                        <h3>
+                        <a href="/game/{{ game['title'] }}">
+                            <img src="{{ url_for('static', filename=game['cover']) }}" alt="{{ game['title'] }}">
+                        {{ game['title'] }}</a></h3>
+                        <div class="game-card-title"></div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination controls directly under the slider -->
+            <div id="pagination-controls" style="margin-top: 20px;"></div>
+
+        </div>
+
+    </div>
+
+    <script>
+        function showGamesByLetter(letter, page = 1) {
+            const slider = document.getElementById('slider-section');
+            slider.innerHTML = '<p>Loading...</p>';
+
+            fetch(`/api/games-by-letter?letter=${letter}&page=${page}`)
+                .then(res => res.json())
+                .then(data => {
+                    const games = data.games;
+                    const hasNext = data.has_next;
+                    slider.innerHTML = '';
+
+                    if (games.length === 0) {
+                        slider.innerHTML = `<p style="text-align:center; width: 100%;">No games found for '${letter}'</p>`;
+                        document.getElementById('pagination-controls').innerHTML = '';
+                        return;
+                    }
+
+                    games.forEach(game => {
+                        const card = document.createElement('div');
+                        card.className = 'game-card';
+                        card.innerHTML = `
+                            <a href="/game/${encodeURIComponent(game.title)}">
+                                <img src="/static/Covers New/${encodeURIComponent(game.path)} Cover.jpg" alt="${game.title}">
+                            </a>
+                            <div class="game-card-title">${game.title}</div>
+                        `;
+                        slider.appendChild(card);
+                    });
+
+                    renderPagination(letter, page, hasNext);
+                });
+        }
+
+        function renderPagination(letter, currentPage, hasNext) {
+            const controls = document.getElementById('pagination-controls');
+            let buttons = '';
+
+            if (currentPage > 1) {
+                buttons += `<button onclick="showGamesByLetter('${letter}', ${currentPage - 1})">Prev</button>`;
+            }
+
+            if (hasNext) {
+                buttons += `<button onclick="showGamesByLetter('${letter}', ${currentPage + 1})">Next</button>`;
+            }
+
+            controls.innerHTML = buttons;
+        }
+    </script>
+    <script src="{{ url_for('static', filename='scripts/base.js') }}"></script>
+
+
+</body>
+</html>

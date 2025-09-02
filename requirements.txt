@@ -1,0 +1,30 @@
+# Deep learning and image processing for resnet_image.py
+torch
+torchvision
+scikit-learn
+# Web framework
+flask
+
+# Database
+pymongo
+
+# HTTP requests and scraping
+requests
+cloudscraper
+beautifulsoup4
+
+# Image processing
+pillow
+imagehash
+
+# APIs and utilities
+rawg
+wikipedia-api
+giantbomb-redux
+howlongtobeatpy
+
+# Data science
+pandas
+numpy
+tqdm
+dacite

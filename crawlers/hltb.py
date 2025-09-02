@@ -9,11 +9,12 @@ class HLTBCrawler(Crawler):
         super().__init__()
         self.hltb = HowLongToBeat()
 
-    def get_api_info(self, title):
+    def get_api_info(self, title, year=None):
         main = '/'
         main_extra = '/'
         complete = '/'
         candidates = []
+        candidates_years = []
         clean_title = title.replace('-', '')
         hltb_success = False
         try:
@@ -21,8 +22,12 @@ class HLTBCrawler(Crawler):
             for game in hltb_games:
                 if game.similarity > 0.7:
                     candidates.append(game.game_name)
+                    try:
+                        candidates_years.append(game.release_world)
+                    except Exception as _:
+                        candidates_years.append(0)
 
-            best_index, best_score, _ = get_best_match(candidates, title)
+            best_index, best_score, _ = get_best_match(candidates, title, year, candidates_years)
             if best_score > self.accepted_score:
                 best_candidate = hltb_games[best_index]
                 main = best_candidate.main_story
@@ -42,3 +47,6 @@ class HLTBCrawler(Crawler):
     
     def get_info(self, url, score):
         return super().get_info(url, score)
+
+    def get_raw_info(self, url):
+        return super().get_raw_info(url)

@@ -1,128 +1,286 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/x-icon" href="../static/logo.png">
     <title>{{ game['title'] }}</title>
-    <style>
-        body 
-        { 
-            font-family: 'Times New Roman'; margin: 0px; color: white;
-            background: url('{{ url_for("static", filename="Posters/poster_1.jpg") }}') no-repeat center center fixed;
-            background-size: cover;
-            position: relative;
-        }
-        body::before 
-        {
-            content: '';
-            position: fixed;
-            top: 0; left: 0;
-            width: 100vw; height: 100vh;
-            background: rgba(0, 0, 0, 0.7); /* adjust darkness here */
-            z-index: -1; /* keeps it behind everything */
-        }
-        .content 
-        {
-            position: relative;
-            z-index: 1;
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .game-box 
-        {
-            background: rgba(221, 131, 14, 0.08); /* soft transparent box */
-            border-radius: 16px;
-            padding: 20px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(10px); /* optional glass effect */
-            margin-top: 40px;
-            display: flex;
-        }
-        .game-container { display: flex; gap: 20px; }
-        .cover img { max-width: 300px; border-radius: 10px; }
-        .info h1 { margin: 0; font-size: 2em; }
-        .slider { margin-top: 30px; display: flex; gap: 10px; overflow-x: auto; }
-        .slider img { height: 150px; border-radius: 6px; }
-        .lightbox-bg {display: none; position: fixed; z-index: 10; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.8); justify-content: center; align-items: center;}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.5/awesomplete.min.css" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/game_page.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/base.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.5/awesomplete.min.js"></script>
 
-        .lightbox-bg img { max-height: 90vh; max-width: 90vw; border-radius: 8px;}
-        
-        .arrow { position: absolute; top: 50%; font-size: 3rem; color: white; cursor: pointer;
-            user-select: none; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 50%; transform: translateY(-50%);}
-        .arrow.left { left: 20px; }
-        .arrow.right { right: 20px; }
-    </style>
 </head>
 <body>
-    <div style="max-width: 1000px; margin: 0 auto;">
-        <div class="game-box">
-            <div class="cover">
-                <img src="{{ url_for('static', filename='Covers/' + game['title'] + '_Cover.jpg') }}" alt="{{ game['title'] }}" 
-                onclick="showCover(this.src)" style="cursor: pointer; margin:5px">
+    <!-- Header -->
+    {% include "header.html" %}
+    
+    <div class="content">
+        <!-- Left: Cover & Info -->
+        <div class="panel info-panel">
+            <h1>{{ game['title'] }}
+                <a href="/crawl/{{ game['title'] }}" class="edit-link"><i class="fa-solid fa-pen"></i></a>
+            </h1>
+            <img src="{{ url_for('static', filename=game['cover']) }}" alt="{{ game['title'] }} Cover" 
+                onclick="showCover(this.src)" style="cursor: pointer; margin:5px" loading="lazy">
+            
+            {% if 'Release Date' in game %}
+                <p><strong>Release Date:</strong> {{game['Release Date']}}</p>
+            {% endif %}
+            {% if 'Genres' in game %}
+            <p><strong>Genres:</strong></p>
+            <div class="widget-tabs" style="text-align: justify">
+                {% for tag in game['Genres'][:5] %}
+                    <span class="widget-tab">{{tag.title()}}</span>
+                {% endfor %}
             </div>
-            <div class="info">
-                <h1>{{ game['title'] }}</h1>
-                <p><strong>Release Date:</strong> {{ game['steam-release-date']}}</p>
-                <p><strong>Description:</strong> {{ game['wikipedia-summary']  | replace('\n','\\n')}}</p>
-            </div>
+            {% endif %}
+            {% if 'similar_games' in game and game['similar_games']|length > 0 %}
+                <p><strong>Similar Games:</strong></p>
+                <div class="image-slider">
+                {% for game in game['similar_games'] %}
+                    <img src="{{ url_for('static', filename='Covers New/' + game['path'] + ' Cover.jpg') }}" 
+                    class="redirect" data-url="/game/{{ game['title'] }}" alt="Similar Image">
+
+                {% endfor %}
+                </div>
+            {% endif %}
         </div>
-        {% set screenshots = [] %}
-        {% for v in game['screenshots'] %}
-            {% set _ = screenshots.append('/static/Screenshots/' ~ v) %}
-        {% endfor %}
-        <div class="slider game-box">
-            {% for img in screenshots%}
-                <img src="{{ img }}" alt="{{ game['title'] }}" 
-                onclick="showLightbox({{ loop.index0 }})" style="cursor: pointer;">
+
+        <!-- Center: Tabbed Widgets -->
+        <div style="width: 55%;">
+            <div class="panel main-panel">
+                <div class="widget-tabs">
+                {% for site in game['sites'] %}
+                    {% set logo = site.lower() + '_logo.png' %}
+                    <div class="widget-plus widget-tab{% if loop.first %} active{% endif %}" onclick="showTab('{{site}}')">
+                       <img src="{{ url_for('static', filename=logo) }}" alt="{{sc}} logo" class="score-logo"> 
+                       <span>{{site.title()}}</span>
+                    </div>
+                {% endfor %}
+                {% for site in ['giantbomb-raw', 'moby-raw', 'steam-raw', 'rawg-raw', 'wikipedia-raw'] %}
+                    {% if site in game %}
+                        {% set logo = site.split('-')[0].lower() + '_logo.png' %}
+                        <div class="widget-plus widget-tab" onclick="showTab('{{site}}')">
+                            <img src="{{ url_for('static', filename=logo) }}" alt="rawg logo" class="score-logo">{{site.title()}}</div>
+                    {% endif %}
+                {% endfor %}
+                {% if 'Achievements' in game %}
+                    <div class="widget-plus widget-tab" onclick="showTab('Achievements')">
+                        <img src="{{ url_for('static', filename='rawg_logo.png') }}" alt="rawg logo" class="score-logo">Achievements
+                    </div>
+                {% endif %}
+                {% if 'Trophies' in game %}
+                    <div class="widget-plus widget-tab" onclick="showTab('Trophies')">
+                        <img src="{{ url_for('static', filename='psn_logo.png') }}" alt="rawg logo" class="score-logo">Trophies
+                    </div>
+                {% endif %}
+                </div>
+                {% for site in game['sites'] %}
+                <div id="{{ site }}" class="widget-content{% if loop.first %} active{% endif %}">
+                    {% if site.lower() + '-url' in game %}
+                        <a style="color: sandybrown" href="{{game[site.lower() + '-url']}}">{{game[site.lower() + '-url']}}</a>
+                    {% endif %}
+                    {% for text_elem in ['intro', 'description', 'summary', 'gameplay', 'synopsis', 'plot', 'reception'] %}
+                        {% set elem = site.lower() + '-' + text_elem %}
+                        {% if elem in game %}
+                            <p ><strong style="color: sandybrown;">{{ text_elem.title() }}</strong></p>
+                            <p style="text-align: justify;">{{ game[elem].replace('\n', '<br>').strip() | safe }}</p>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                {% endfor %}
+
+                <!-- Raw Content -->
+                {% for site in ['giantbomb-raw', 'moby-raw', 'steam-raw', 'rawg-raw', 'wikipedia-raw'] %}
+                    {% if site in game %}
+                        <div id="{{ site }}" class="widget-content">
+                            <div>
+                                {{game[site]  | safe }}
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+
+                {% if 'Achievements' in game %}
+                    <div id="Achievements" class="widget-content">
+                        <div class="achievements">
+                            {% for achievement in game['Achievements'] %}
+                                <div class="achievement">
+                                    <img src="{{ achievement['image'] }}" 
+                                        alt="{{ achievement['name'] }}" 
+                                        class="achievement-icon">
+                                    <div class="achievement-info">
+                                        <span class="achievement-name">{{ achievement['name'] }}</span>
+                                        <span class="achievement-percentage">{{ achievement['percent'] }}%</span>
+                                        <p class="achievement-text">{{ achievement['description'] }}</p>
+                                    </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+                {% if 'Trophies' in game %}
+                    <div id="Trophies" class="widget-content">
+                        <div class="achievements">
+                            {% for achievement in game['Trophies'] %}
+                                <div class="achievement {% if not achievement.text %}achievement-special{% endif %}">
+                                    <img src="{{ achievement['image'] }}" 
+                                        alt="{{ achievement['title'] }}" 
+                                        class="achievement-icon">
+                                    <div class="achievement-info">
+                                        <span class="achievement-name  {% if not achievement.text %}achievement-name-sp{% endif %}">{{ achievement['title'] }}</span>
+                                        <span class="achievement-percentage">{{ achievement['percentage-2'] }}</span>
+                                        <p class="achievement-text">{{ achievement['text'] }}</p>
+                                    </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+
+            </div>
+            <div class="image-slider" id="image-slider">
+            {% for img_url in game['gallery'] %}
+                <img src="{{ url_for('static', filename=img_url) }}" alt="Gallery Image" onclick="showlightbox(this.src)" loading="lazy">
             {% endfor %}
+            </div>
         </div>
+
+        <!-- Right: Scores -->
+        <div class="panel score-panel">
+            <h3 style="color: sandybrown;">Information</h3>
+            {% if 'scores' in game %}
+                {% for sc in game['scores'] %}
+                    <!--<p>{{sc}}: <span class="score-box" style="background-color: {{game['scores'][sc][1]}}">{{game['scores'][sc][0]}}</span></p>-->
+                    <div class="score-row">
+                        {% set logo = sc.split(' ')[0].lower() + '_logo.png' %}
+                        <img src="{{ url_for('static', filename=logo) }}" alt="{{sc}} logo" class="score-logo">
+                        <span class="score-label">{{sc}}</span>
+                        <span class="score-box" style="background-color: {{ game['scores'][sc][1] }}">
+                            {{game['scores'][sc][0]}}
+                        </span>
+                        </div>
+                {% endfor %}
+            {% endif %}
+            
+            {% if 'backloggd-split-rating' in game %}
+                <div class="barplot-row">
+                    <img src="{{ url_for('static', filename='backloggd_logo.png') }}" alt="{{sc}} logo" class="score-logo">
+                    <span >Avg Rating: {{ game['scores'].get('Backloggd Rating', ['/'])[0] }}</span>
+                </div>
+                
+                <div class="score-histogram">
+                {% set max_count = game['backloggd-split-rating'].values() | max %}       
+                {% for rating, rating_count in game['backloggd-split-rating'].items()  %}
+                    {% set height = (rating_count / [max_count, 1] | max * 100) | round(0, 'ceil') %}
+                    {% set height = [height, 1] | max %}
+                    <div class="bar" style="height: {{ height }}%;" title="{{ rating }} ★ – {{ rating_count }} votes">
+                    </div>
+                {% endfor %}
+                </div>
+                <span>
+                    0.5★
+                </span>
+                <span style="float:right">
+                    5★
+                </span>
+            {% endif %}
+        </div>
+
         <div class="lightbox-bg" id="coverbox">
             <img id="coverbox-img" src="" alt="Preview">
         </div>
+
         <div class="lightbox-bg" id="lightbox">
-            <span class="arrow left" onclick="prevImage(event)">&#10094;</span>
+            <button class="lightbox-nav" id="lightbox-prev">&#10094;</button>
             <img id="lightbox-img" src="" alt="Preview">
-            <span class="arrow right" onclick="nextImage(event)">&#10095;</span>
+            <button class="lightbox-nav" id="lightbox-next">&#10095;</button>
         </div>
     </div>
-    
-</body>
-<script>
-    let currentIndex = 0;
-    const screenshots_test = {{screenshots | tojson | safe}};
-    function showCover(src) {
-        const lightbox = document.getElementById('coverbox');
-        const img = document.getElementById('coverbox-img');
-        img.src = src;
-        lightbox.style.display = 'flex';
-    }
 
-    function showLightbox(index = 0) 
-    {
-        currentIndex = index;
+    <script>
+
         const lightbox = document.getElementById('lightbox');
-        const img = document.getElementById('lightbox-img');
-        img.src = screenshots_test[currentIndex];
-        lightbox.style.display = 'flex';
-    }
+        const lightboxImg = document.getElementById('lightbox-img');
+        const galleryImages = Array.from(document.querySelectorAll('#image-slider img'));
+        let currentIndex = -1;
 
-    function nextImage(e) {
-        e.stopPropagation();
-        currentIndex = (currentIndex + 1) % screenshots_test.length;
-        document.getElementById('lightbox-img').src = screenshots_test[currentIndex];
-    }
+        function showlightbox(src) {
+            currentIndex = galleryImages.findIndex(img => img.src === src);
+            if (currentIndex >= 0) {
+                lightboxImg.src = galleryImages[currentIndex].src;
+                lightbox.style.display = 'flex';
+            }
+        }
 
-    function prevImage(e) {
-        e.stopPropagation();
-        currentIndex = (currentIndex - 1 + screenshots_test.length) % screenshots_test.length;
-        document.getElementById('lightbox-img').src = screenshots_test[currentIndex];
-    }
+        document.getElementById('lightbox-prev').onclick = () => {
+            if (currentIndex > 0) {
+                currentIndex--;
+                lightboxImg.src = galleryImages[currentIndex].src;
+            }
+            else {
+                currentIndex = galleryImages.length - 1;
+                lightboxImg.src = galleryImages[currentIndex].src;
+            }
+        };
 
-    document.getElementById('coverbox').onclick = () => {
-        document.getElementById('coverbox').style.display = 'none';
-    }
-    document.getElementById('lightbox').onclick = () => {
-        document.getElementById('lightbox').style.display = 'none';
-    }
-</script>
+        document.getElementById('lightbox-next').onclick = () => {
+            if (currentIndex < galleryImages.length - 1) {
+                currentIndex++;
+                lightboxImg.src = galleryImages[currentIndex].src;
+            }
+            else{
+                currentIndex = 0;
+                lightboxImg.src = galleryImages[currentIndex].src;
+            }
+        };
+
+        lightbox.onclick = (e) => {
+            // Close only if background is clicked (not image or buttons)
+            if (e.target === lightbox) {
+                lightbox.style.display = 'none';
+                currentIndex = -1;
+            }
+        };
+
+        document.addEventListener('keydown', (e) => {
+            if (lightbox.style.display === 'flex') {
+                if (e.key === 'ArrowLeft') document.getElementById('lightbox-prev').click();
+                else if (e.key === 'ArrowRight') document.getElementById('lightbox-next').click();
+                else if (e.key === 'Escape') lightbox.style.display = 'none';
+            }
+        });
+
+        function showTab(id) {
+            const tabs = document.querySelectorAll('.widget-tab');
+            const contents = document.querySelectorAll('.widget-content');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            contents.forEach(content => content.classList.remove('active'));
+
+            document.querySelector('.widget-tab[onclick*="' + id + '"]').classList.add('active');
+            document.getElementById(id).classList.add('active');
+        }
+
+        function showCover(src) 
+        {
+            const lightbox = document.getElementById('coverbox');
+            const img = document.getElementById('coverbox-img');
+            img.src = src;
+            lightbox.style.display = 'flex';
+        }
+
+        document.getElementById('coverbox').onclick = () => 
+        {
+            document.getElementById('coverbox').style.display = 'none';
+        }
+        document.querySelectorAll(".redirect").forEach(img => {
+            img.style.cursor = "pointer";
+            img.addEventListener("click", () => {
+            window.location.href = img.dataset.url;
+            });
+        });
+    </script>
+    <script src="{{ url_for('static', filename='scripts/base.js') }}"></script>
+</body>
 </html>

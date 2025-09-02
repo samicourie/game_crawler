@@ -1,0 +1,111 @@
+a, li { color: sandybrown;}
+.awesomplete {width:98%; padding-right: 20px;}
+
+
+body {
+    font-family: 'Times New Roman';
+    margin: 0;
+    padding: 40px;
+    color: white;
+    font-size: large;
+    background: url('/static/Posters/poster_1.jpg') center/cover no-repeat fixed;
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.8);
+    z-index: -0.5;
+}
+
+.top-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 60px;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(8px);
+    color: white;
+    z-index: 1000;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.search-wrapper {
+    flex-grow: 1;
+    display: flex;
+    justify-content: left;
+    margin-left: 1%;
+}
+
+.orange_input {
+    width: 99%;
+    padding: 8px 5px;
+    border-radius: 8px;
+    border: none;
+    font-size: 16px;
+    background: rgba(255, 255, 255, 0.1);
+    color: black;
+    outline: none;
+    background-color: sandybrown;
+}
+
+.logo-link {
+    font-size: 24px;
+    font-weight: bold;
+    color: sandybrown;
+    text-decoration: none;
+}
+
+/* Sidebar */
+.sidebar {
+    height: 100vh;
+    width: 15%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background-color: inherit;
+    overflow-x: hidden;
+    padding-top: 60px;
+    z-index: -1;
+    display: none; 
+}
+
+.sidebar a {
+    padding: 10px 20px;
+    text-decoration: none;
+    font-size: 25px;
+    color: sandybrown;
+    display: block;
+
+}
+
+.sidebar a:hover {
+    background: #575757;
+    color: white;
+}
+
+.sidebar .closebtn {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    font-size: 28px;
+    color: sandybrown;
+    cursor: pointer;
+}
+
+/* Hamburger button */
+.openbtn {
+    font-size: 25px;
+    margin-right: 10px;
+    cursor: pointer;
+    color: sandybrown;
+    background-color: inherit;
+    border: none;
+}

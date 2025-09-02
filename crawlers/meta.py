@@ -8,7 +8,7 @@ class MetaCrawler(Crawler):
         super().__init__()
         self.base_meta = 'https://www.metacritic.com'
 
-    def get_url(self, title):
+    def get_url(self, title, year=None):
         temp_title = title
         # score, edist_score = 0, 0
         # url, edist_url = '', ''
@@ -24,6 +24,7 @@ class MetaCrawler(Crawler):
             soup = get_soup(url)
             search_results = soup.find_all('a', {'class': 'c-pageSiteSearch-results-item'})[:15]
             candidates = []
+            candidate_years = []
             urls = []
             for result in search_results:
                 p_elem = result.find('p')
@@ -35,11 +36,18 @@ class MetaCrawler(Crawler):
                 urls.append(self.base_meta + result.attrs['href'])
                 candidates.append(search_title)
 
-            best_candidate = get_best_match(candidates, title)
+                try:
+                    game_year = result.find('span', {'class': 'u-text-uppercase'}).text.split(', ')[1].replace('\n', '')
+                    candidate_years.append(int(game_year))
+                except Exception as _:
+                    candidate_years.append(0)
+
+            best_candidate = get_best_match(candidates, title, title_year=year, candidates_years=candidate_years)
             temp_title = candidates[best_candidate[0]]
             score = best_candidate[1]
             url = urls[best_candidate[0]]
-            success = True
+            if score >= self.accepted_score:
+                success = True
         except Exception as _:
             pass
 
@@ -86,3 +94,6 @@ class MetaCrawler(Crawler):
 
     def get_api_info(self, title):
         return super().get_api_info(title)
+
+    def get_raw_info(self, url):
+        return super().get_raw_info(url)

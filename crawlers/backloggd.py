@@ -1,4 +1,5 @@
 import re
+import json
 from crawlers.crawler import Crawler
 from util.utility import get_soup, get_best_match
 
@@ -9,28 +10,44 @@ class BackloggdCrawler(Crawler):
         super().__init__()
         self.base_backloggd = 'https://backloggd.com'
 
-    def get_url(self, title):
+    def get_url(self, title, year=None):
         score = 0
         url = ''
         success = False
         try:
             new_title = title.replace('-', ' ').strip()
             new_title = re.sub(' +', ' ', new_title)
-            url = self.base_backloggd + '/search/games/' + new_title + '/'
+            # url = self.base_backloggd + '/search/games/' + new_title + '/'
+            url = self.base_backloggd + '/autocomplete.json?query=' + new_title
             soup = get_soup(url)
+            candidates_elems = json.loads(soup.text)['suggestions']
+
+            '''
             candidates_elems = soup.find('div', {'id': 'search-results'}).find_all('a')
+            candidates_years = [year.text for year in soup.find_all('h1', {'class': 'game-date'})]
             candidates_a = []
             for elem in candidates_elems:
                 img_elem = elem.find('img')
                 if img_elem is not None and 'alt' in img_elem.attrs:
                     candidates_a.append(elem) 
-            candidates_urls = [v.attrs['href'] for v in candidates_a]
-            candidates_titles = [v.find('img').attrs['alt'] for v in candidates_a]
-            best_candidate = get_best_match(candidates_titles, title)
+            '''
+            candidates_urls = []
+            candidates_years = []
+            candidates_titles = []
+            for game in candidates_elems:
+                candidates_titles.append(game['value'])
+                candidates_urls.append(self.base_backloggd + '/games/' + game['data']['slug'])
+                try:
+                    candidates_years.append(int(game['data']['year']))
+                except Exception as _:
+                    candidates_years.append(0)
+
+            best_candidate = get_best_match(candidates_titles, title, title_year=year, candidates_years=candidates_years)
             backloggd_title = candidates_titles[best_candidate[0]]
             score = best_candidate[1]
-            url = self.base_backloggd + candidates_urls[best_candidate[0]]
-            success = True
+            url = candidates_urls[best_candidate[0]]
+            if score >= self.accepted_score:
+                success = True
         except Exception as _:
             pass
 
@@ -64,3 +81,6 @@ class BackloggdCrawler(Crawler):
     
     def get_api_info(self, title):
         return super().get_api_info(title)
+    
+    def get_raw_info(self, url):
+        return super().get_raw_info(url)

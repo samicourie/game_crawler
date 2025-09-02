@@ -17,7 +17,7 @@ class IGDBCrawler(Crawler):
                                 5: 'Mod', 6: 'Episode', 7: 'Season', 8: 'Remake', 9: 'Remaster', 10: 'Expanded Game',
                                 11: 'Port', 12: 'Fork', 13: 'Pack', 14: 'Update'}
 
-    def get_url(self, title):
+    def get_url(self, title, year=None):
         query = None
         success = False
         best_search_name = ''
@@ -25,18 +25,21 @@ class IGDBCrawler(Crawler):
         best_score = 0
 
         if query is None:
-            query = '"; fields name; where platforms.category!=(3); limit 30;'
+            query = '"; fields name, first_release_date; where platforms.category!=(3); limit 30;'
 
         try:
             search_query = 'search "' + title + query
             response = requests.post('https://api.igdb.com/v4/games', headers=self.headers, data=search_query)
             search_results = json.loads(response.content.decode('utf-8'))
             candidates = [v['name'] for v in search_results]
-            best_match = get_best_match(candidates=candidates, title=title)
+            candidate_years = [int(datetime.fromtimestamp(v['first_release_date']).strftime('%Y')) 
+                               if 'first_release_date' in v else 0 for v in search_results]
+            best_match = get_best_match(candidates=candidates, title=title, title_year=year, candidates_years=candidate_years)
             best_search_name = search_results[best_match[0]]['name']
             best_search_id = search_results[best_match[0]]['id']
             best_score = best_match[1]
-            success = True
+            if best_score >= self.accepted_score:
+                success = True
         except Exception as _:
             pass
         return {'igdb-title': best_search_name, 'igdb-url': best_search_id, 
@@ -83,3 +86,6 @@ class IGDBCrawler(Crawler):
 
     def get_api_info(self, title):
         return super().get_api_info(title)
+    
+    def get_raw_info(self, url):
+        return super().get_raw_info(url)

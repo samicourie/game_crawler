@@ -1,3 +1,4 @@
+import zlib
 import urllib
 import wikipediaapi
 from crawlers.crawler import Crawler
@@ -11,7 +12,7 @@ class WikipediaCrawler(Crawler):
         self.base_wiki = 'https://en.wikipedia.org'
         self.wiki_obj = wikipediaapi.Wikipedia('Games DB', 'en')
 
-    def get_url(self, title):
+    def get_url(self, title, year=None):
         temp_title = title
         # score, edist_score = 0, 0
         score = 0
@@ -37,7 +38,8 @@ class WikipediaCrawler(Crawler):
             temp_title = candidates[best_candidate[0]]
             score = best_candidate[1]
             url = self.base_wiki + urls[best_candidate[0]]
-            success = True
+            if score >= self.accepted_score:
+                success = True
         except Exception as _:
             pass
 
@@ -54,6 +56,7 @@ class WikipediaCrawler(Crawler):
         wiki_synopsis = '#'
         wiki_genre = '#'
         wiki_reception = '#'
+        wiki_story = '#'
         success = False
         if score >= self.accepted_score:
             soup = get_soup(url)
@@ -92,6 +95,17 @@ class WikipediaCrawler(Crawler):
             wiki_plot = temp_text
 
             temp_text = ''
+            wiki_story = game_wiki_page.section_by_title('Story')
+            if wiki_story is not None:
+                temp_text = wiki_story.text
+                if len(wiki_story.sections) > 0:
+                    for sec in wiki_story.sections:
+                        temp_text += sec.title + ': ' + sec.text + '\n'
+            else:
+                wiki_story = '#'
+            wiki_story = temp_text
+
+            temp_text = ''
             wiki_synopsis = game_wiki_page.section_by_title('Synopsis')
             if wiki_synopsis is not None:
                 temp_text = wiki_synopsis.text
@@ -114,9 +128,36 @@ class WikipediaCrawler(Crawler):
             wiki_reception = temp_text
             success = True
 
-        return {'wikipedia-summary': wiki_summary, 'wikipedia-gameplay': wiki_gameplay, 
-                'wikipedia-success': success, 'wikipedia-plot': wiki_plot, 
+        # wikipedia_raw = zlib.compress(str(self.get_raw_info(soup)).encode('utf-8'))
+        wikipedia_raw = str(self.get_raw_info(soup))
+        return {'wikipedia-summary': wiki_summary, 'wikipedia-gameplay': wiki_gameplay, 'wikipedia-story': wiki_story,
+                'wikipedia-success': success, 'wikipedia-plot': wiki_plot, 'wikipedia-raw': wikipedia_raw,
                 'wikipedia-synopsis': wiki_synopsis, 'wikipedia-genre': wiki_genre, 'wikipedia-reception': wiki_reception}
 
     def get_api_info(self, title):
         return super().get_api_info(title)
+
+    def get_raw_info(self, soup):
+
+        raw_info = ''
+
+        try:
+            # Cleaning Wikipedia
+            info_table = soup.find('table', {'class': 'infobox ib-video-game hproduct'})
+            if info_table is not None:
+                info_table.decompose()
+            edit_spans = soup.find_all('span', {'class': 'mw-editsection'})
+            for sp in edit_spans:
+                sp.decompose()
+            reflists = soup.find_all('div', {'class': 'reflist'})
+            for ref in reflists:
+                ref.decompose() 
+            sups = soup.find_all('sup', {'class': 'reference'})
+            for sp in sups:
+                sp.decompose()
+            raw_info = str(soup.find('div', {'id': 'mw-content-text'}))
+
+            success = True
+        except Exception as _:
+            pass
+        return raw_info

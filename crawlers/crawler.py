@@ -16,7 +16,7 @@ class Crawler(ABC):
         self._accepted_score = value
     
     @abstractmethod
-    def get_url(self, title):
+    def get_url(self, title, year=None):
         pass
 
     @abstractmethod
@@ -24,5 +24,9 @@ class Crawler(ABC):
         pass
 
     @abstractmethod
-    def get_api_info(self, title):
+    def get_api_info(self, title, year=None):
+        pass
+    
+    @abstractmethod
+    def get_raw_info(self, url, year=None):
         pass
