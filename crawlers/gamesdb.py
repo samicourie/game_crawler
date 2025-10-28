@@ -8,6 +8,7 @@ class GamesDBCrawler(Crawler):
 
     def __init__(self):
         super().__init__()
+        self.site = 'gamesdb'
         self.details_gamesdb = 'https://gamesdb.launchbox-app.com/games/details/'
         self.search_gamesdb = 'https://api.gamesdb.launchbox-app.com/api/search/'
         self.image_base = 'https://images.launchbox-app.com//'
@@ -18,7 +19,7 @@ class GamesDBCrawler(Crawler):
                           'Sony Playstation 2', 'Sony Playstation 3', 'Sony Playstation 4', 'Sony Playstation 5', 'Sony PSP', 
                           'Super Nintendo Entertainment System', 'Windows']
 
-    def get_url(self, title, year=None):
+    def get_url(self, title, year=0):
         temp_title = title
         score = 0
         url = ''

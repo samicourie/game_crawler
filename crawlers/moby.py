@@ -7,9 +7,10 @@ class MobyCrawler(Crawler):
 
     def __init__(self):
         super().__init__()
+        self.site = 'moby'
         self.base_moby = 'https://www.mobygames.com/search/?q='
 
-    def get_url(self, title, year=None):
+    def get_url(self, title, year=0):
         temp_title = title
         # score, edist_score = 0, 0
         # url, edist_url = '', ''
@@ -93,15 +94,21 @@ class MobyCrawler(Crawler):
                     dt_elem = temp_elems[el].text
                     dd_elem = temp_elems[el+1].text
                     if 'Moby Score' in dt_elem:
-                        dd_split = dd_elem.split('#')
-                        json_obj['moby-internal-score'] = dd_split[0].strip()
-                        json_obj['moby-rank'] = dd_split[1].split(' of')[0].strip()
-                        continue
+                        try:
+                            dd_split = dd_elem.split('#')
+                            json_obj['moby-internal-score'] = dd_split[0].strip()
+                            json_obj['moby-rank'] = dd_split[1].split(' of')[0].strip()
+                            continue
+                        except Exception as _:
+                            pass
                     if 'Critics' in dt_elem:
-                        dd_split = dd_elem.split('%')
-                        json_obj['moby-critics-score'] = dd_split[0].strip()
-                        json_obj['moby-critics-count'] = dd_split[1].replace('(', '').replace(')', '').strip()
-                        continue
+                        try:
+                            dd_split = dd_elem.split('%')
+                            json_obj['moby-critics-score'] = dd_split[0].strip()
+                            json_obj['moby-critics-count'] = dd_split[1].replace('(', '').replace(')', '').strip()
+                            continue
+                        except Exception as _:
+                            pass
 
                 temp_div = soup.find('div', {'class': 'info-genres'})
                 temp_dl = temp_div.find('dl')

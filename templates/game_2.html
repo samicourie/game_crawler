@@ -52,38 +52,84 @@
             <div class="panel main-panel">
                 <div class="widget-tabs-container">
                     <div class="widget-tabs" id="tabs-container">
-                    {% for site in game['sites'] %}
+                        {% set all_tabs = [] %}
+                        {% for site in game['sites'] %}
                         {% set logo = site.lower() + '_logo.png' %}
-                        <div class="widget-plus widget-tab{% if loop.first %} active{% endif %}" onclick="showTab('{{site}}')">
-                        <img src="{{ url_for('static', filename=logo) }}" alt="{{sc}} logo" class="score-logo"> 
-                        <span>{{site.title()}}</span>
-                        </div>
-                    {% endfor %}
-                    {% for site in ['giantbomb-raw', 'moby-raw', 'steam-raw', 'rawg-raw', 'wikipedia-raw'] %}
+                        {% set tab = {
+                            "id": site,
+                            "logo": logo,
+                            "label": site.title(),
+                            "is_active": loop.first
+                        } %}
+                        {% set _ = all_tabs.append(tab) %}
+                        {% endfor %}
+                        {% for site in ['giantbomb-raw', 'moby-raw', 'steam-raw', 'rawg-raw', 'wikipedia-raw'] %}
                         {% if site in game %}
                             {% set logo = site.split('-')[0].lower() + '_logo.png' %}
-                            <div class="widget-plus widget-tab" onclick="showTab('{{site}}')">
-                                <img src="{{ url_for('static', filename=logo) }}" alt="rawg logo" class="score-logo">{{site.title()}}</div>
+                            {% set tab = {
+                            "id": site,
+                            "logo": logo,
+                            "label": site.title(),
+                            "is_active": false
+                            } %}
+                            {% set _ = all_tabs.append(tab) %}
                         {% endif %}
-                    {% endfor %}
-                    {% for key in ['RAWG Achievements', 'Steam Achievements'] %}
+                        {% endfor %}
+                        {% for key in ['RAWG Achievements', 'Steam Achievements'] %}
                         {% if key in game %}
                             {% set logo = key.split(' ')[0].lower() + '_logo.png' %}
-                            <div class="widget-plus widget-tab" onclick="showTab('{{key}}')">
-                                <img src="{{ url_for('static', filename=logo) }}" alt="logo" class="score-logo">
-                                <img src="{{ url_for('static', filename='achievement.png') }}" alt="logo" class="score-logo">
-                            </div>
+                            {% set tab = {
+                            "id": key,
+                            "logo": logo,
+                            "label": key.split(' ')[0],
+                            "is_active": false,
+                            "extra_logo": "achievement.png"
+                            } %}
+                            {% set _ = all_tabs.append(tab) %}
                         {% endif %}
-                    {% endfor %}
-                    {% if 'Trophies' in game %}
-                        <div class="widget-plus widget-tab" onclick="showTab('Trophies')">
-                            <img src="{{ url_for('static', filename='psn_logo.png') }}" alt="rawg logo" class="score-logo">
-                            <img src="{{ url_for('static', filename='achievement.png') }}" alt="logo" class="score-logo">
+                        {% endfor %}
+                        {% if 'Trophies' in game %}
+                        {% set tab = {
+                            "id": "Trophies",
+                            "logo": "psn_logo.png",
+                            "label": "Trophies",
+                            "is_active": false,
+                            "extra_logo": "achievement.png"
+                        } %}
+                        {% set _ = all_tabs.append(tab) %}
+                        {% endif %}
+
+                        {# Render first 5 tabs normally #}
+                        {% for tab in all_tabs[:5] %}
+                        <div class="widget-plus widget-tab{% if tab.is_active %} active{% endif %}" 
+                            onclick="activateTab('{{ tab.id }}')">
+                            <img src="{{ url_for('static', filename=tab.logo) }}" class="score-logo">
+                            <span>{{ tab.label }}</span>
+                            {% if tab.extra_logo %}
+                            <img src="{{ url_for('static', filename=tab.extra_logo) }}" class="score-logo">
+                            {% endif %}
                         </div>
-                    {% endif %}
-                    
+                        {% endfor %}
+
+                        {# "More" dropdown if > 5 #}
+                        {% if all_tabs|length > 5 %}
+                        <div class="widget-tab more-tab" onclick="toggleMoreMenu()">…</div>
+                        <div class="more-menu hidden" id="more-menu">
+                            {% for tab in all_tabs[5:] %}
+                            <div class="widget-plus widget-tab" 
+                                onclick="activateTab('{{ tab.id }}', true)">
+                                <img src="{{ url_for('static', filename=tab.logo) }}" class="score-logo">
+                                <span>{{ tab.label }}</span>
+                                {% if tab.extra_logo %}
+                                <img src="{{ url_for('static', filename=tab.extra_logo) }}" class="score-logo">
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
+
 
                 {% for site in game['sites'] %}
                 <div id="{{ site }}" class="widget-content{% if loop.first %} active{% endif %}">
@@ -305,7 +351,28 @@
             window.location.href = img.dataset.url;
             });
         });
-        
+
+        function toggleMoreMenu() {
+            document.getElementById("more-menu").classList.toggle("hidden");
+            }
+
+            function activateTab(id, fromMenu=false) {
+            // remove active class from all
+            document.querySelectorAll(".widget-tab").forEach(tab => tab.classList.remove("active"));
+
+            // add to clicked
+            const tabEl = [...document.querySelectorAll(".widget-tab")]
+                .find(el => el.getAttribute("onclick")?.includes(id));
+            if (tabEl) tabEl.classList.add("active");
+
+            // close dropdown if from menu
+            if (fromMenu) {
+                document.getElementById("more-menu").classList.add("hidden");
+            }
+
+            // Your existing logic to showTab content
+            showTab(id);
+            }
     </script>
     <script src="{{ url_for('static', filename='scripts/base.js') }}"></script>
 </body>

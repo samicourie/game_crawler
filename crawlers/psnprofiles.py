@@ -6,9 +6,10 @@ class PSNProfilesCrawler(Crawler):
 
     def __init__(self):
         super().__init__()
+        self.site = 'psnprofiles'
         self.base_psnprofiles = 'https://psnprofiles.com'
 
-    def get_url(self, title, year=None):
+    def get_url(self, title, year=0):
         temp_title = title
         # score, edist_score = 0, 0
         # url, edist_url = '', ''

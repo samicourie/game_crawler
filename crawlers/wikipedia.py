@@ -9,10 +9,11 @@ class WikipediaCrawler(Crawler):
     
     def __init__(self):
         super().__init__()
+        self.site = 'wikipedia'
         self.base_wiki = 'https://en.wikipedia.org'
         self.wiki_obj = wikipediaapi.Wikipedia('Games DB', 'en')
 
-    def get_url(self, title, year=None):
+    def get_url(self, title, year=0):
         temp_title = title
         # score, edist_score = 0, 0
         score = 0

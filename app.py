@@ -2,13 +2,43 @@ import os
 import zlib
 import random
 import string
-# from bs4 import BeautifulSoup
-from datetime import datetime
-# from bson.json_util import dumps
+from util.crawl_helper import CrawlHelper
+from util.image_utility import ImageUtility
 from util.utility import get_mongo_collection, organise_game_frontend
 from flask import Flask, render_template, jsonify, request, redirect, url_for
 
+from langchain_chroma import Chroma
+from langchain_ollama import OllamaLLM
+from langchain.chains import RetrievalQA
+from langchain_huggingface import HuggingFaceEmbeddings
+
 app = Flask(__name__)
+
+
+def search_chroma(query):
+    embeddings = HuggingFaceEmbeddings(model_name='sentence-transformers/all-MiniLM-L6-v2')
+    db = Chroma(
+        persist_directory='./chroma_vg_db',
+        embedding_function=embeddings
+    )
+
+    source_filters = {'source': {'$in': ['steam-text', 'igdb-text', 'wikipedia-text', 'giantbomb-text', 'gamesdb-text',
+                               'rawg-text', 'mobygames-text', 'backloggd-text', 'metacritic-text']}} 
+
+    results = db.similarity_search(query, k=1000, filter=source_filters)
+    best_by_game = []
+    best_by_game_set = set()
+
+    for doc in results:
+        game = doc.metadata.get('game')
+        if game not in best_by_game_set:
+            best_by_game_set.add(game)
+            best_by_game.append(game)
+
+    res_size = 54
+    # return top k unique games
+    return best_by_game[:res_size]
+
 
 @app.route('/')
 def home():
@@ -45,7 +75,7 @@ def game_detail(game_title):
         return 'Game not found', 404
 
     front_end_game = organise_game_frontend(game)
-    return render_template('game.html', game=front_end_game)
+    return render_template('game_2.html', game=front_end_game)
 
 @app.route('/crawl/<game_title>')
 def crawl_game(game_title):
@@ -59,19 +89,43 @@ def crawl_game(game_title):
 
 @app.route("/crawl", methods=["POST"])
 def crawl():
+    
     data = request.get_json()
     entries = data.get("entries", [])
-
-    results = {}
-    for e in entries:
-        site = e["site"]
-        url = e["url"]
-        results[url] = {
-            "site": site,
-            "data": f"crawled content for {site} at {url}"
-        }
-
+    title = data.get('title', '')
+    crawl_helper = CrawlHelper()
+    results = {'title': title}
+    results.update(crawl_helper.crawl_urls(entries))
+    
     return jsonify(results)
+
+
+@app.route("/save_game_data", methods=["POST"])
+def save_game_data():
+    
+    json_obj = request.get_json()
+    data = json_obj['data']
+    new_dict = dict()
+    for key, val in data.items():
+        if key == 'title':
+            new_dict[key] = val
+        else:
+            new_dict.update(val)
+    
+    for key, val in new_dict.items():
+        if key.endswith('-raw'):
+            new_dict[key] = zlib.compress(str(val).encode('utf8'))
+    
+    get_mongo_collection().update_one({'title': new_dict['title']}, {'$set': new_dict})
+    for key in list(data.keys()):
+        game_obj = get_mongo_collection().find_one({'title': new_dict['title']})
+        if json_obj['pictures_check'] or json_obj['cover_check']:
+            image_util = ImageUtility()
+            image_util.download_images(game_obj=game_obj, download_images=json_obj['pictures_check'],
+                                       download_cover=json_obj['cover_check'])
+        break
+
+    return jsonify({'success': True})
 
 
 @app.route('/api/game-titles')
@@ -149,10 +203,14 @@ def search():
     skip = (page - 1) * per_page
 
     # Fetch results (limit 50)
-    results = list(
-        get_mongo_collection().find(query, {'title': 1, 'path': 1, 'Release Date': 1, 
-                                            'igdb-summary': 1}).skip(skip).limit(per_page)
-    )
+    if query:
+        results = list(
+            get_mongo_collection().find(query, {'title': 1, 'path': 1, 'Release Date': 1, 
+                                                'igdb-summary': 1}).skip(skip).limit(per_page)
+        )
+    else:
+        total_pages = 1
+        results = list(get_mongo_collection().aggregate([{'$sample': {'size': per_page}}]))
 
     for game in results:
         cover = 'Covers New/' + game['path'] + ' Cover.jpg'
@@ -264,6 +322,35 @@ def build_advance_search_query(form):
             pass
 
     return query
+
+
+@app.route('/search_ai', methods=['GET', 'POST'])
+def search_ai():
+    text = ''
+    results = []
+    if request.method == 'POST':
+        text = request.form.get('text', '')
+        search_results = search_chroma(text)
+
+        results = []
+        for game in search_results:
+            game_obj = get_mongo_collection().find_one({'title': game}, {'title': 1, 'path': 1, 'Release Date': 1, 'igdb-summary': 1})
+            results.append(game_obj)
+
+        for game in results:
+            cover = 'Covers New/' + game['path'] + ' Cover.jpg'
+            if not os.path.exists('static/' + cover):
+                cover = 'Covers New/blank Cover.jpg'
+            game['cover'] = cover
+
+        order_map = {name: i for i, name in enumerate(search_results)}
+        results.sort(key=lambda d: order_map.get(d['title'], len(search_results)))
+    
+    # Copy args for pagination links
+    args = request.args.to_dict(flat=False)
+    args.pop('page', None)  # remove page, we'll override it
+
+    return render_template('search_ai.html', text=text, results=results, current_args=args)
 
 
 if __name__ == '__main__':

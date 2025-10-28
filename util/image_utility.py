@@ -106,50 +106,50 @@ class ImageUtility:
             except Exception as e:
                 print(e)
 
-    def download_images(self, game_obj, download_cover=True, nb_images=10):
+    def download_images(self, game_obj, download_images=True, download_cover=True, nb_images=20):
         game_title = game_obj['title']
         ch = game_title[0].upper()
         if ch not in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
             ch = '#'
         if download_cover:
             if 'igdb-cover' in game_obj:
-                cover_path = 'static/Covers/' + game_obj['path'] + ' Cover.jpg'
+                cover_path = 'static/Covers New/' + game_obj['path'] + ' Cover.jpg'
                 response = requests.get(game_obj['igdb-cover'])
                 with open(cover_path, 'wb') as img_file:
                     img_file.write(response.content)
 
-        image_list = []
-        for image_key in ['giantbomb-screenshots', 'igdb-screenshots', 'steam-images']:
-            if image_key in game_obj:
-                image_list.extend(game_obj[image_key])
-        
-        if 'gamesdb-images' in game_obj:
-            for lst in game_obj['gamesdb-images'].values():
-                if lst[0] == 'Screenshot - Gameplay':
-                    image_list.extend(lst[1:])
+        if download_images:
+            image_list = []
+            for image_key in ['giantbomb-screenshots', 'igdb-screenshots', 'steam-images']:
+                if image_key in game_obj:
+                    image_list.extend(game_obj[image_key])
+            
+            if 'gamesdb-images' in game_obj:
+                for lst in game_obj['gamesdb-images'].values():
+                    if lst[0] == 'Screenshot - Gameplay':
+                        image_list.extend(lst[1:])
 
-        image_size = 50000
-        if len(image_list) > 0:
-            random.shuffle(image_list)
-            count = 1
-            for img in image_list:
-                try:
-                    image_path = 'static/New Temp/' + ch + '/' + game_obj['path'] + ' ' + str(count) + '.jpg'
-                    response = requests.get(img)
-                    if len(response.content) < image_size:
-                        continue
-                    pil_img = self.convert_url_img_to_pil(response)
-                    img_embedding = self.get_embedding(pil_img)
+            image_size = 50000
+            if len(image_list) > 0:
+                random.shuffle(image_list)
+                count = 1
+                for img in image_list:
+                    try:
+                        image_path = 'static/Temp/' + ch + '/' + game_obj['path'] + ' ' + str(count) + '.jpg'
+                        response = requests.get(img)
+                        if len(response.content) < image_size:
+                            continue
+                        pil_img = self.convert_url_img_to_pil(response)
+                        img_embedding = self.get_embedding(pil_img)
 
-                    if self.add_or_not(img_embedding, image_path):
-                        with open(image_path, 'wb') as img_file:
-                            img_file.write(response.content)
-                            count += 1
-                            if count > nb_images:
-                                break
-                except Exception as e:
-                    print(e)
-
+                        if self.add_or_not(img_embedding, image_path):
+                            with open(image_path, 'wb') as img_file:
+                                img_file.write(response.content)
+                                count += 1
+                                if count > nb_images:
+                                    break
+                    except Exception as e:
+                        print(e)
 
 
 '''

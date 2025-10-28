@@ -9,6 +9,7 @@ class IGDBCrawler(Crawler):
 
     def __init__(self):
         super().__init__()
+        self.site = 'igdb'
         self.igdb_token = IGDB_TOKEN
         self.igdb_client_id = IGDB_CLIENT_ID
         self.igdb_client_secret = IGDB_CLIENT_SECRET
@@ -17,7 +18,7 @@ class IGDBCrawler(Crawler):
                                 5: 'Mod', 6: 'Episode', 7: 'Season', 8: 'Remake', 9: 'Remaster', 10: 'Expanded Game',
                                 11: 'Port', 12: 'Fork', 13: 'Pack', 14: 'Update'}
 
-    def get_url(self, title, year=None):
+    def get_url(self, title, year=0):
         query = None
         success = False
         best_search_name = ''

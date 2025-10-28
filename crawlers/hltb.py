@@ -8,8 +8,9 @@ class HLTBCrawler(Crawler):
     def __init__(self):
         super().__init__()
         self.hltb = HowLongToBeat()
+        self.site = 'hltb'
 
-    def get_api_info(self, title, year=None):
+    def get_api_info(self, title, year=0):
         main = '/'
         main_extra = '/'
         complete = '/'
@@ -46,7 +47,25 @@ class HLTBCrawler(Crawler):
         return super().get_url(title)
     
     def get_info(self, url, score):
-        return super().get_info(url, score)
+
+        if score >= self.accepted_score:
+            main = '/'
+            main_extra = '/'
+            complete = '/'
+            hltb_id = int(url.split('/')[-1])
+            hltb_success = False
+            try:
+                hltb_game = self.hltb.search_from_id(hltb_id)
+                main = hltb_game.main_story
+                main_extra = hltb_game.main_extra
+                complete = hltb_game.completionist
+                game_id = hltb_game.game_id
+                hltb_success = True
+                return {'hltb-main': main, 'hltb-main+': main_extra, 'hltb-complete': complete, 
+                        'hltb-id': game_id, 'hltb-url': url, 'hltb-success': hltb_success}
+            except Exception as _:
+                pass
+        return {'hltb-success': hltb_success}
 
     def get_raw_info(self, url):
         return super().get_raw_info(url)

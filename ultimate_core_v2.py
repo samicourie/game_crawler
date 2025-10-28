@@ -1,5 +1,7 @@
 import json
 import time
+from util.utility import get_mongo_collection, get_path, organise_game_data
+from util.image_utility import ImageUtility
 from crawlers.backloggd import BackloggdCrawler
 from crawlers.gamesdb import GamesDBCrawler
 from crawlers.giantbomb import GiantbombCrawler
@@ -7,8 +9,10 @@ from crawlers.hltb import HLTBCrawler
 from crawlers.igdb import IGDBCrawler
 from crawlers.meta import MetaCrawler
 from crawlers.moby import MobyCrawler
-from crawlers.rawg import RawgCrawler
-from crawlers.riot import RiotCrawler
+from crawlers.psnprofiles import PSNProfilesCrawler
+# from crawlers.rawg import RawgCrawler
+from crawlers.rawg_2 import RawgCrawler
+# from crawlers.riot import RiotCrawler
 from crawlers.steam import SteamCrawler
 from crawlers.wikipedia import WikipediaCrawler
 
@@ -89,67 +93,75 @@ crawler_dict = {
     'igdb': IGDBCrawler(),
     'metacritics': MetaCrawler(),
     'moby': MobyCrawler(),
+    'psnprofiles': PSNProfilesCrawler(),
     'rawg': RawgCrawler(),
     # 'riot': RiotCrawler(),
     'steam': SteamCrawler(),
     'wikipedia': WikipediaCrawler()}
-"""
+
+
 with open('new_games.txt', 'r', encoding='utf-8') as file:
     lines = file.readlines()
+
+
+game_title = "Marvel's Spider-Man"
 """
-
-with open('retro.json', 'r', encoding='utf-8') as file:
-    retro_games = json.load(file)
-"""
-
-game_title = 'Hollow Knight'
-
-backloggd_helper = crawler_dict['backloggd'].get_url(game_title)
+backloggd_helper = crawler_dict['backloggd'].get_url(game_title, 2008)
 backloggd_info = crawler_dict['backloggd'].get_info(backloggd_helper['backloggd-url'], backloggd_helper['backloggd-score'])
 
-gamesdb_helper = crawler_dict['gamesdb'].get_url(game_title)
+gamesdb_helper = crawler_dict['gamesdb'].get_url(game_title, 2008)
 gamesdb_info = crawler_dict['gamesdb'].get_info(gamesdb_helper['gamesdb-url'], gamesdb_helper['gamesdb-score'])
 
-giantbomb_info = crawler_dict['giantbomb'].get_api_info(game_title)
+giantbomb_info = crawler_dict['giantbomb'].get_api_info(game_title, 2008)
 
-hltb_info = crawler_dict['hltb'].get_api_info(game_title)
+hltb_info = crawler_dict['hltb'].get_api_info(game_title, 2008)
 
-igdb_helper = crawler_dict['igdb'].get_url(game_title)
+igdb_helper = crawler_dict['igdb'].get_url(game_title, 2008)
 igdb_info = crawler_dict['igdb'].get_info(igdb_helper['igdb-url'], igdb_helper['igdb-score'])
 
-meta_helper = crawler_dict['metacritics'].get_url(game_title)
+meta_helper = crawler_dict['metacritics'].get_url(game_title, 2008)
 meta_info = crawler_dict['metacritics'].get_info(meta_helper['metacritics-url'], meta_helper['metacritics-score'])
 
-moby_helper = crawler_dict['moby'].get_url(game_title)
+moby_helper = crawler_dict['moby'].get_url(game_title, 2008)
 moby_info = crawler_dict['moby'].get_info(moby_helper['moby-url'], moby_helper['moby-score'])
+"""
+psn_helper = crawler_dict['psnprofiles'].get_url(game_title, 0)
+psn_info = crawler_dict['psnprofiles'].get_info(psn_helper['psnprofiles-url'], psn_helper['psnprofiles-score'])
+"""
+rawg_info = crawler_dict['rawg'].get_api_info(game_title, 2021)
 
-rawg_info = crawler_dict['rawg'].get_api_info(game_title)
+# riot_helper = crawler_dict['riot'].get_url(game_title)
+# riot_info = crawler_dict['riot'].get_info(riot_helper['riot-url'], riot_helper['riot-score'])
 
-riot_helper = crawler_dict['riot'].get_url(game_title)
-riot_info = crawler_dict['riot'].get_info(riot_helper['riot-url'], riot_helper['riot-score'])
-
-steam_helper = crawler_dict['steam'].get_url(game_title)
+steam_helper = crawler_dict['steam'].get_url(game_title, 2008)
 steam_info = crawler_dict['steam'].get_info(steam_helper['steam-url'], steam_helper['steam-score'])
 
 wiki_helper = crawler_dict['wikipedia'].get_url(game_title)
 wiki_info = crawler_dict['wikipedia'].get_info(wiki_helper['wikipedia-url'], wiki_helper['wikipedia-score'])
 """
 
-wanted_crawlers = ['gamesdb']
+my_game_col = get_mongo_collection()
+all_games_paths = {v['path'].lower() for v in my_game_col.find({}, {'_id': 0, 'path': 1})}
+all_games_titles = {v['title'] for v in my_game_col.find({}, {'_id': 0, 'title': 1})}
+
 new_dict = dict()
 count = 0
-for line in retro_games:
-    temp_line = line.replace('\n', '')
+image_utility = ImageUtility()
+for line in lines:
+    line_arr = line.replace('\n', '').split('#')
+    temp_line = line_arr[0].strip()
+    temp_year = int(line_arr[1])
     str_obj = temp_line
-    new_dict[temp_line] = dict()
-    for site in wanted_crawlers:
+    new_dict[temp_line] = {'title': temp_line}
+    # for site in crawler_dict:
+    for site in crawler_dict:
         # print(temp_line, site)
         try:
             if site in ['hltb', 'giantbomb', 'rawg']:
-                site_info = crawler_dict[site].get_api_info(temp_line)
+                site_info = crawler_dict[site].get_api_info(temp_line, temp_year)
                 new_dict[temp_line].update(site_info)
             else:
-                site_helper = crawler_dict[site].get_url(temp_line)
+                site_helper = crawler_dict[site].get_url(temp_line, temp_year)
                 if site_helper[site+'-success'] and site_helper[site+'-score'] >= crawler_dict[site].accepted_score:
                     site_info = crawler_dict[site].get_info(site_helper[site+'-url'], site_helper[site+'-score'])
                     new_dict[temp_line].update(site_helper)
@@ -158,18 +170,21 @@ for line in retro_games:
                     new_dict[temp_line].update({site+'-success': False})
             if site in ['giantbomb', 'metacritics']:
                 time.sleep(10)
-            elif site in ['gamesdb']:
-                time.sleep(5)
             else:
                 time.sleep(1)
             str_obj += ' # ' + site + ':' + str(new_dict[temp_line].get(site+'-success', 'False'))
         except Exception as _:
             str_obj += ' # ' + site + ':' + str(new_dict[temp_line].get(site+'-success', 'False'))
+    
+    new_dict[temp_line]['path'] = get_path(temp_line, all_games_paths)
+    new_dict[temp_line].update(organise_game_data(new_dict[temp_line], all_games_titles))
+    image_utility.download_images(new_dict[temp_line])
+    image_utility.reset()
     count += 1
-    if count % 50 == 0:
-        with open('gamesdb_retro.json', 'w', encoding='utf-8') as file:
+    if count % 5 == 0:
+        with open('new_games_2.json', 'w', encoding='utf-8') as file:
             json.dump(new_dict, file)
     print(str_obj)
 
-with open('gamesdb_retro.json', 'w', encoding='utf-8') as file:
+with open('new_games_2.json', 'w', encoding='utf-8') as file:
     json.dump(new_dict, file)

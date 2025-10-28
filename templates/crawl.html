@@ -9,6 +9,9 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles/base.css') }}">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.5/awesomplete.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jquery.json-viewer/json-viewer/jquery.json-viewer.css">
+    <script src="https://cdn.jsdelivr.net/npm/jquery.json-viewer/json-viewer/jquery.json-viewer.js"></script>
+
 
 </head>
 <body>
@@ -18,7 +21,7 @@
     <div class="content">
         <!-- Left: Cover & Info -->
         <div class="panel info-panel" style="width:20%">
-            <h1>{{ game['title'] }}</h1>
+            <h1 class="title">{{ game['title'] }}</h1>
             <img src="{{ url_for('static', filename=game['cover']) }}" alt="{{ game['title'] }} Cover" 
                 onclick="showCover(this.src)" style="cursor: pointer; margin:5px" loading="lazy">
         </div>
@@ -26,7 +29,8 @@
             <h3 style="margin-bottom: 10px;">Crawl Inputs</h3>
             <div id="crawl-inputs">
                 <div class="crawl-row">
-                    <select class="crawl-site">
+                    <select class="crawl-site orange_input">
+                        <option value="">--</option>
                         <option value="backloggd">Backloggd</option>
                         <option value="gamesdb">GamesDB</option>
                         <option value="giantbomb">GiantBomb</option>
@@ -44,10 +48,19 @@
             </div>
             <button id="add-input">+ Add Another URL</button>
             <button id="crawl-btn">Crawl</button>
+            <span id="crawl-loader" class="loader hidden"></span>
         </div>
         <div class="panel info-panel" style="width:55%">
-            <h3>Results</h3>
-            <pre id="results">{ }</pre>
+            <h2 style="margin:0;">
+                Results
+            </h2>
+            <div id="results" style="max-height: 70vh; overflow-y: auto;"></div>
+            <div style="margin: 2vh;">
+                <input type="checkbox" id="pictures" name="pictures"/><label>Download Pictures</label>
+                <input type="checkbox" id="cover" name="cover"/><label>Download Cover</label>
+                <span id="save-loader" class="loader hidden"></span>
+                <button id="save-btn" class="orange_input save-button">💾 Save</button>
+            </div>
         </div>
 
         <div class="lightbox-bg" id="coverbox">
@@ -63,7 +76,8 @@
             $("#add-input").on("click", function() {
                 $("#crawl-inputs").append(`
                 <div class="crawl-row">
-                    <select class="crawl-site">
+                    <select class="crawl-site orange_input">
+                        <option value="">--</option>
                         <option value="backloggd">Backloggd</option>
                         <option value="gamesdb">GamesDB</option>
                         <option value="giantbomb">GiantBomb</option>
@@ -76,7 +90,7 @@
                         <option value="steam">Steam</option>
                         <option value="wikipedia">Wikipedia</option>
                     </select>
-                    <input type="text" class="crawl-url orange_input" placeholder="Enter website URL">
+                    <input type="text" class="crawl-url orange_input" placeholder="Enter website URL / Game ID">
                 </div>
                 `);
             });
@@ -96,23 +110,59 @@
                     alert("Please enter at least one site + URL.");
                     return;
                 }
-
+                let title = $(document).find("h1").text()
+                $("#crawl-loader").removeClass("hidden"); 
                 // AJAX to Flask backend
                 $.ajax(
                 {
                     url: "/crawl",
                     type: "POST",
                     contentType: "application/json",
-                    data: JSON.stringify({ entries: entries }),
+                    data: JSON.stringify({ entries: entries, title: title}),
                     success: function(response) {
-                        $("#results").text(JSON.stringify(response, null, 2));
+                        lastCrawlResults = response;
+                        // $("#results").text(JSON.stringify(response, null, 2));
+                        $("#results").jsonViewer(response, {collapsed: false, withQuotes: true});
                     },
                     error: function(err) {
                         $("#results").text("Error: " + err.responseText);
+                    },
+                    complete: function() {
+                        $("#crawl-loader").addClass("hidden"); // hide loader
+                    }
+                });
+            });
+
+            // Save button
+            $("#save-btn").on("click", function() {
+                if ($.isEmptyObject(lastCrawlResults)) {
+                    alert("No results to save. Please crawl first.");
+                    return;
+                }
+                let pictures_check = $("#pictures").prop('checked');
+                let cover_check = $("#cover").prop('checked');
+                $("#save-loader").removeClass("hidden");
+                $.ajax({
+                    url: "/save_game_data",   // your Flask endpoint
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify({ data: lastCrawlResults, 
+                        pictures_check: pictures_check,
+                        cover_check: cover_check }),
+                    success: function(resp) {
+                        alert("Results saved successfully!");
+                    },
+                    error: function(err) {
+                        alert("Error saving results: " + err.responseText);
+                    },
+                    complete: function() {
+                        $("#save-loader").addClass("hidden"); // hide loader
                     }
                 });
             });
         });
+        
+        
 
         const lightbox = document.getElementById('coverbox');
 

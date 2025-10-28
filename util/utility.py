@@ -256,6 +256,11 @@ def organise_game_frontend(game_obj):
         val = game_obj['steam-nb-users']
         if val not in ['', '#', '0', '/']:
             scores['Steam #Users'] = [val, 'hotpink']
+
+    if 'steam-all-time-peaks' in game_obj:
+        val = game_obj['steam-all-time-peaks']
+        if val not in ['', '#', '0', '/']:
+            scores['Steam Peak #Users'] = [val, 'hotpink']
     
     for key in ['hltb-main', 'hltb-main+', 'hltb-complete']:
         if key in game_obj:
@@ -277,12 +282,16 @@ def organise_game_frontend(game_obj):
         new_game_obj[key] = game_obj[key][0] if game_obj[key][0] != '' else game_obj[key][1]
 
     key = 'rawg-achievements'
-    if key in game_obj:
-        new_game_obj['Achievements'] = game_obj[key]
+    if key in game_obj and len(game_obj[key]) > 0:
+        new_game_obj['RAWG Achievements'] = game_obj[key]
 
     key = 'psnprofiles-achievements'
-    if key in game_obj:
+    if key in game_obj and len(game_obj[key]) > 0:
         new_game_obj['Trophies'] = game_obj[key]
+
+    key = 'steam-achievements'
+    if key in game_obj and len(game_obj[key]) > 0:
+        new_game_obj['Steam Achievements'] = game_obj[key]
 
     new_game_obj['sites'] = set()
     for key in ['backloggd-description', 'gamesdb-description', 'giantbomb-intro', 'giantbomb-description', 
@@ -328,7 +337,7 @@ def organise_game_frontend(game_obj):
             if sim_game:
                 similar_games.append(sim_game)
         new_game_obj['similar_games'] = similar_games
-
+    
     # Read raw pages and decompress them
     if 'giantbomb-raw' in game_obj:
         new_game_obj['giantbomb-raw'] = zlib.decompress(game_obj['giantbomb-raw']).decode('utf-8')

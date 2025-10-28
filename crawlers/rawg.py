@@ -12,7 +12,7 @@ class RawgCrawler(Crawler):
         super().__init__()
         self.rawg_key = RAWG_KEY
 
-    async def get_rawg_requests(self, title, year=None):
+    async def get_rawg_requests(self, title, year=0):
         temp_title = title
         score = 0
         description = ''

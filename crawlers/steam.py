@@ -7,9 +7,12 @@ class SteamCrawler(Crawler):
 
     def __init__(self):
         super().__init__()
+        self.site = 'steam'
         self.base_url = 'https://store.steampowered.com/search/?term='
+        self.achiev_url = 'https://steamcommunity.com/stats/{id}/achievements'
+        self.charts_url = 'https://steamcharts.com/app/{id}'
 
-    def get_url(self, title, year=None):
+    def get_url(self, title, year=0):
         temp_title = title
         # score, edist_score = 0, 0
         score = 0
@@ -62,12 +65,14 @@ class SteamCrawler(Crawler):
         steam_raw = '#'
         steam_summary = '#'
         steam_critics = ''
+        steam_atp = ''
         steam_tags = '#'
         steam_nb_users = ''
         steam_genres = '#'
         developers_list = ''
         date = ''
         success = False
+        steam_achivements = []
         steam_images = []
         if steam_score >= self.accepted_score:
             try:
@@ -103,10 +108,26 @@ class SteamCrawler(Crawler):
                     wanted_div = my_a[1]
                 else:
                     wanted_div = my_a[0]
-                    
-                steam_critics = wanted_div.attrs['data-tooltip-html'].split('%')[0]
-                steam_nb_users = int(wanted_div.find('span', {'class': 'responsive_hidden'})
-                                        .text[1:-1].strip()[1:-1].replace(',', ''))
+                
+                try:
+                    review_span = soup.find('span', {'class': 'review_summary_count'})
+                    if review_span:
+                        steam_nb_users = int(review_span.text.replace(',', ''))
+                    else:
+                        steam_nb_users = int(wanted_div.find('span', {'class': 'responsive_hidden'})
+                                                             .text[1:-1].strip()[1:-1].replace(',', ''))
+                except Exception as _:
+                    pass
+                
+                try:
+                    review_div = soup.find('div', {'class', 'review_language_outliers'})
+                    if review_div:
+                        steam_critics = review_div.find('span', {'class': 'game_review_summary positive'}).attrs['data-tooltip-html'].split('%')[0]
+                    else:
+                        steam_critics = wanted_div.attrs['data-tooltip-html'].split('%')[0]
+                except Exception as _:
+                    pass
+        
                 try:
                     date = soup.find('div', {'class': 'date'}).text
                 except AttributeError as _:
@@ -131,12 +152,32 @@ class SteamCrawler(Crawler):
                     found_dev_list.append(link.text)
                 developers_list = '; '.join(found_dev_list)
                 success = True
+
+                steam_id = url.split('app/')[1].split('/')[0]
+                achiev_url = self.achiev_url.replace('{id}', steam_id)
+                soup_achiev = get_soup(achiev_url, steam=True)
+                all_achiev = soup_achiev.find_all('div', {'class': 'achieveRow'})
+                for achiev in all_achiev:
+                    achiev_dict = dict()
+                    achiev_dict['image'] = achiev.find('img').attrs['src']
+                    achiev_dict['percent'] = achiev.find('div', {'class': 'achievePercent'}).text
+                    achiev_dict['name'] = achiev.find('h3').text
+                    achiev_dict['description'] = achiev.find('h5').text
+                    steam_achivements.append(achiev_dict)
+
+                charts_url = self.charts_url.replace('{id}', steam_id)
+                soup_charts = get_soup(charts_url, steam=True)
+                try:
+                    steam_atp = int(soup_charts.find_all('div', {'class': 'app-stat'})[-1].find('span').text)
+                except Exception as _:
+                    pass
             except Exception as _:
                 pass
         
         return {'steam-description': steam_description, 'steam-summary': steam_summary, 'steam-tags': steam_tags, 'steam-raw': steam_raw,
                 'steam-genres': steam_genres, 'steam-positive': steam_critics, 'steam-images': steam_images, 'steam-success': success,
-                'steam-nb-users': steam_nb_users, 'steam-release-date': date, 'steam-developers': developers_list}
+                'steam-nb-users': steam_nb_users, 'steam-release-date': date, 'steam-developers': developers_list,
+                'steam-all-time-peaks': steam_atp, 'steam-achievements': steam_achivements}
 
     def get_api_info(self, title):
         return super().get_api_info(title)

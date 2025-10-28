@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/x-icon" href="static/logo.png">
+    <title>AI Search</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.5/awesomplete.min.css" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/search.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/base.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.5/awesomplete.min.js"></script>
+
+</head>
+<body>
+    <!-- Header -->
+    {% include "header.html" %}
+
+    <!-- Advanced Search Panel -->
+    <div class="content">
+        <div class="panel search-panel">
+            <h1>AI Search</h1>
+            <form method="POST" action="/search_ai">
+                <!-- Title -->
+                <div class="form-group">
+                    <label for="title">Title</label>
+                    <textarea name="text" id="text" class="orange_input orange_textarea" placeholder="Text..."></textarea>
+                </div>
+
+                <button type="submit" class="search-btn">Search</button>
+            </form>
+        </div>
+
+        <!-- Results Grid -->
+        <div class="panel results-panel">
+            <h2 style="margin: 0;">Results</h2>
+            <div class="results-grid">
+                {% for game in results %}
+                <div class="result-card">
+                    <h3>
+                        <a href="/game/{{ game['title'] }}">
+                        <img src="{{ url_for('static', filename=game['cover']) }}" alt="{{ game['title'] }} Cover">
+                    {{ game['title'] }}</a></h3>
+                    {% if 'Release Date' in game and game['Release Date'] %}
+                        <p class="release-date">{{ game['Release Date'][0] }}</p>
+                    {% endif %}
+                    
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+
+  <script>
+        document.querySelectorAll('.dropdown-multi').forEach(dropdown => {
+            const searchInput = dropdown.querySelector('.dropdown-search');
+            const options = dropdown.querySelectorAll('.dropdown-options label');
+
+            searchInput.addEventListener('keyup', function() {
+                const filter = this.value.toLowerCase();
+                options.forEach(opt => {
+                    const text = opt.innerText.toLowerCase();
+                    opt.style.display = text.includes(filter) ? '' : 'none';
+                });
+            });
+        });
+
+  </script>
+  <script src="{{ url_for('static', filename='scripts/base.js') }}"></script>
+</body>
+</html>

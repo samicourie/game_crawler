@@ -8,9 +8,10 @@ class BackloggdCrawler(Crawler):
 
     def __init__(self):
         super().__init__()
+        self.site = 'backloggd'
         self.base_backloggd = 'https://backloggd.com'
 
-    def get_url(self, title, year=None):
+    def get_url(self, title, year=0):
         score = 0
         url = ''
         success = False
