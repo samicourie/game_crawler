@@ -20,7 +20,7 @@ imagehash
 # APIs and utilities
 rawg
 wikipedia-api
-giantbomb-redux
+# giantbomb-redux
 howlongtobeatpy
 
 # Data science
@@ -28,3 +28,10 @@ pandas
 numpy
 tqdm
 dacite
+
+# Dashboard and visualization
+streamlit
+plotly
+
+# Do this too
+# pip install langchain langchain-huggingface langchain-chroma langchain-ollama chromadb sentence-transformers

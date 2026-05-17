@@ -1,4 +1,3 @@
-import re
 from crawlers.crawler import Crawler
 from util.utility import get_soup, get_best_match
 
@@ -46,13 +45,13 @@ class PSNProfilesCrawler(Crawler):
                 'psnprofiles-success': success}
 
 
-    def get_info(self, url, score):
+    def get_info(self, url, score, is_stored=False):
         psnprofiles_score = float(score)
         psnprofiles_achievements = []
         res_dict = {'psnprofiles-success': False}
         if psnprofiles_score >= self.accepted_score:
             try:
-                soup = get_soup(url, cloud_scrapper=True)
+                soup = get_soup(url, is_stored=is_stored, cloud_scrapper=True)
                 main_div = soup.find('div', {'class': 'col-xs'})
                 ach_tables = main_div.find_all('table', {'class': 'zebra'})
                 if len(ach_tables) > 1:

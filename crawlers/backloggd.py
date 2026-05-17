@@ -20,7 +20,7 @@ class BackloggdCrawler(Crawler):
             new_title = re.sub(' +', ' ', new_title)
             # url = self.base_backloggd + '/search/games/' + new_title + '/'
             url = self.base_backloggd + '/autocomplete.json?query=' + new_title
-            soup = get_soup(url)
+            soup = get_soup(url, cloud_scrapper=True)
             candidates_elems = json.loads(soup.text)['suggestions']
 
             '''
@@ -66,10 +66,10 @@ class BackloggdCrawler(Crawler):
 
         if backloggd_score >= self.accepted_score:
             try:
-                soup = get_soup(url)
+                soup = get_soup(url, cloud_scrapper=True)
                 backloggd_description = soup.find('div', {'id': 'collapseSummary'}).text
                 backloggd_rating = soup.find('div', {'id': 'game-rating'}).find('h1').text
-                side_content = soup.find('div', {'class': 'side-section'}).find_all('div', {'class': 'col px-0 top-tooltip'})
+                side_content = soup.find('div', {'id': 'ratings-bars-height'}).find_all('div', {'class': 'col px-0 top-tooltip'})
                 ratings = [v.attrs['data-tippy-content'] for v in side_content]
                 count_ratings = [v.split(' ★ ')[0] for v in ratings]
                 split_ratings = {v.split(' | ')[1]: v.split(' | ')[0] for v in count_ratings}

@@ -22,8 +22,8 @@ class MetaCrawler(Crawler):
             new_title = title
             url = base_url + new_title + '/?page=1&category=13'
 
-            soup = get_soup(url)
-            search_results = soup.find_all('a', {'class': 'c-pageSiteSearch-results-item'})[:15]
+            soup = get_soup(url, cloud_scrapper=True)
+            search_results = soup.find_all('a', {'class': 'c-search-item search-item__content'})[:15]
             candidates = []
             candidate_years = []
             urls = []
@@ -38,7 +38,7 @@ class MetaCrawler(Crawler):
                 candidates.append(search_title)
 
                 try:
-                    game_year = result.find('span', {'class': 'u-text-uppercase'}).text.split(', ')[1].replace('\n', '')
+                    game_year = result.find('span', {'data-v-13f2cb4a': ''}).text.split(', ')[1].replace('\n', '')
                     candidate_years.append(int(game_year))
                 except Exception as _:
                     candidate_years.append(0)
@@ -70,20 +70,21 @@ class MetaCrawler(Crawler):
             try:
                 critics = ''
                 users = ''
-                soup = get_soup(url)
+                soup = get_soup(url, cloud_scrapper=True)
                 meta_description = soup.find('meta', {'name': 'description'}).attrs['content']
-                score_div = soup.find('div', {'class': 'c-reviewsSection'})
+                critics_score = soup.find('div', {'data-testid': 'critic-reviews'})
+                users_score = soup.find('div', {'data-testid': 'user-reviews'})
                 try:
-                    critics = score_div.find('div', {'class': 'c-siteReviewScore_background-critic_large'}).find('span').text
+                    critics = critics_score.find('span', {'data-testid': 'global-score-value'}).text
                 except Exception as e:
                     critics = ''
                 try:
-                    users = score_div.find('div', {'class': 'c-siteReviewScore_background-user'}).find('span').text
+                    users = users_score.find('span', {'data-testid': 'global-score-value'}).text
                 except Exception as e:
                     users = ''
 
                 try:
-                    date = soup.find('div', {'class': 'c-gameDetails_ReleaseDate'}).find('span', {'class': 'g-color-gray70'}).text
+                    date = soup.find('div', {'class': 'hero-release-date'}).find('div', {'class': 'hero-release-date__value'}).text
                 except Exception as _:
                     date = ''
                 success = True

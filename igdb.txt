@@ -1,0 +1,6 @@
+POST: https://id.twitch.tv/oauth2/token?client_id=jp6q5jcny08ncmuq7ioy3x4vvng0zu&client_secret=4bxqe32mv5uvo6bvrwsh15szm7lxr4&grant_type=client_credentials
+
+
+curl -i -X POST -H "Content-Type: application/json" -d "{""client_id"":""jp6q5jcny08ncmuq7ioy3x4vvng0zu"",""client_secret"":""4bxqe32mv5uvo6bvrwsh15szm7lxr4"", ""grant_type"": ""client_credentials""}" https://id.twitch.tv/oauth2/token
+
+{"access_token":"omqcpnylxahuwd3tm2a4t3ztsp95p8","expires_in":4926987,"token_type":"bearer"}

@@ -26,7 +26,7 @@ class IGDBCrawler(Crawler):
         best_score = 0
 
         if query is None:
-            query = '"; fields name, first_release_date; where platforms.category!=(3); limit 30;'
+            query = '"; fields name, first_release_date; where platforms.platform_type!=(3); limit 30;'
 
         try:
             search_query = 'search "' + title + query
@@ -54,7 +54,7 @@ class IGDBCrawler(Crawler):
             try:
                 query = 'fields name,alternative_names.name,game_engines.name,artworks.url,similar_games.name, remakes.name, remasters.name,'\
                         'cover.url,dlcs.name,expansions.name,first_release_date,player_perspectives.name,screenshots.url,standalone_expansions.name,'\
-                        'franchise.name,themes.name,keywords.name,screenshots.url,category,rating,genres.name,summary,storyline;'
+                        'franchise.name,themes.name,keywords.name,screenshots.url,game_type,rating,genres.name,summary,storyline;'
                 
                 response = requests.post('https://api.igdb.com/v4/games', headers=self.headers, data=query + ' where id=' + str(game_id) + ';')
                 game = json.loads(response.content.decode('utf-8'))[0]

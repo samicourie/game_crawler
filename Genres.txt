@@ -1,0 +1,453 @@
+1980s	Retro
+1990's	Retro
+2.5D	2D # 3D
+2D	2D
+2D Fighter	2D # Fighting
+2D Platformer	2D # Platformer
+360 Video	3D
+3D	3D
+3D Fighter	3D # Fighting
+3D Platformer	3D # Platformer
+3D Vision	3D
+4 Player Local	Co-op # Multiplayer
+4X	Co-op # Multiplayer
+6DOF	3D
+Abstract	Art
+Action	Action
+Action RPG	Action # RPG
+Action RTS	Action # RTS
+Action Roguelike	Action # Roguelike
+Action-Adventure	Action # Adventure
+Addictive	Immersive
+Adventure	Adventure
+Agriculture	Agriculture
+Aliens	Aliens
+Alternate History	Historical
+Ambient	Immersive
+America	/
+Animation & Modeling	/
+Anime	Anime
+Arcade	Arcade
+Archery	Action
+Arena Shooter	Arena Shooter
+Artificial Intelligence	/
+Assassin	Action
+Asymmetric VR	VR
+Asynchronous Multiplayer	Multiplayer
+Atmospheric	Immersive
+Audio Production	Music
+Auto Battler	Automation
+Automation	Automation
+Automobile Sim	Simulator
+BMX	Sport
+Base Building	Strategy
+Baseball	Sport
+Based On A Novel	Adaptation
+Basketball	Sport
+Battle Royale	Battle Royale
+Beat 'em up	Beat 'em up
+Beautiful	Beautiful
+Benchmark	/
+Bikes	Sport
+Birds	Adventure
+Block-Breaking	/
+Blood	Action Gore
+Board Game	Board Game
+Boomer Shooter	Boomer Shooter
+Boss Rush	Boss Rush
+Bowling	Sport
+Boxing	Sport
+Brawler	Action # Fighting # Beat 'em up
+Building	Simulator
+Bullet Hell	Bullet Hell
+Bullet Time	Action
+CRPG	CRPG
+Capitalism	/
+Card & Board Game	Board Game
+Card Battler	Card Game
+Card Game	Card Game
+Cartoon	Cartoon
+Cartoony	Cartoon
+Casual	Casual
+Cats	Cozy
+Character Action Game	Action
+Character Customization	RPG
+Chess	Sport
+Choices Matter	Choices Matter
+Choose Your Own Adventure	Choose Your Own Adventure
+Cinematic	Story Rich
+City Builder	City Builder
+Class-Based	RPG
+Classic	Retro
+Clicker	Horror # Zombies
+Co-op	Co-op
+Co-op Campaign	Co-op
+Cold War	Historical
+Collectathon	Compilation
+Colony Sim	Strategy
+Colorful	Colorful # Art
+Combat	Action
+Combat Racing	Action # Racing
+Comedy	Comedy
+Comic Book	Adaptation
+Competitive	Multiplayer
+Compilation	Compilation
+Conspiracy	/
+Controller	/
+Conversation	Story Rich
+Cooking	Cooking
+Cozy	Cozy
+Crafting	Crafting
+Creature Collector	Creature Collector
+Crime	Crime
+Crowdfunded	/
+Cult Classic	/
+Cute	Cozy
+Cyberpunk	Cyberpunk
+Cycling	Sport
+Dark	Dark
+Dark Comedy	Dark # Comedy
+Dark Fantasy	Dark # Fantasy
+Dark Humor	Dark # Comedy
+Dating Sim	Dating Sim
+Deckbuilding	Deckbuilding
+Demons	Action # Horror
+Design & Illustration	Art
+Destruction	Action
+Detective	Detective
+Dice	Card Game
+Difficult	/
+Dinosaurs	/
+Diplomacy	Strategy # Historical
+Documentary	/
+Dog	/
+Dragons	Fantasy
+Drama	Story Rich
+Driving	Driving
+Driving/Racing	Driving # Racing
+Dual-Joystick Shooter	Twin Stick Shooter
+Dungeon Crawler	Dungeon Crawler
+Dungeons & Dragons	Dungeons & Dragons
+Dwarf	Fantasy
+Dynamic Narration	Choices Matter
+Dystopian	Dystopian
+Early Access	/
+Economy	Strategy
+Education	/
+Educational	/
+Electronic	/
+Electronic Music	Music
+Emotional	Story Rich
+Epic	Fantasy
+Episodic	Episodic
+Escape Room	Escape Room
+Experience	/
+Experimental	/
+Exploration	Exploration
+FMV	Retro # Story Rich
+FPS	First-Person # Shooter
+Faith	/
+Family Friendly	Family
+Fantasy	Fantasy
+Farming	Agriculture # Simulator
+Farming Sim	Agriculture # Simulator
+Fast-Paced	Action
+Female Protagonist	Female Protagonist
+Fighting	Fighting
+First-Person	First-Person
+First-Person Shooter	First-Person # Shooter
+Fishing	Sport
+Flight	Flight Simulator
+Flight Simulator	Flight Simulator
+Football (Soccer)	Sport
+Foreign	/
+Fox	/
+Free to Play	/
+Funny	Comedy
+Futuristic	Cyberpunk
+Gambling	/
+Game Development	Simulator
+GameMaker	Simulator
+Games Workshop	Simulator
+Gaming	Simulator
+God Game	Fantasy
+Golf	Sport
+Gore	Gore
+Gothic	Historical
+Grand Strategy	Strategy
+Great Soundtrack	Music
+Grid-Based Movement	Tactical
+Gun Customization	Looter # Shooter
+Hack and Slash	Hack and Slash
+Hack and slash/Beat 'em up	Hack and Slash # Beat 'em up
+Hacking	/
+Hand-drawn	Art # Colorful
+Heist	Crime
+Hentai	NSFW
+Hero Shooter	Shooter
+Hex Grid	/
+Hidden Object	Hidden Object
+Historical	Historical
+Hockey	Sport
+Horror	Horror
+Horses	Sport
+Hunting	Action
+Idler	/
+Illuminati	/
+Immersive	Immersive
+Immersive Sim	Immersive
+Indie	Indie
+Instrumental Music	Music
+Intentionally Awkward Controls	/
+Interactive Fiction	/
+Inventory Management	Management
+Investigation	Investigation
+Isometric	Isometric
+JRPG	JRPG
+Jet	Sport
+Job Simulator	Simulator
+Jump Scare	Horror
+Kickstarter	/
+LEGO	/
+LGBTQ+	LGBTQ+
+Lemmings	/
+Level Editor	Simulator
+Life Sim	Simulator
+Light-Gun Shooter	Shooter
+Linear	/
+Local Co-Op	Co-op
+Local Multiplayer	Co-op # Multiplayer
+Logic	/
+Loot	Looter
+Looter Shooter	Looter # Shooter
+Lore-Rich	Story Rich
+Lovecraftian	Fantasy # Historical
+MMORPG	Multiplayer
+MOBA	Multiplayer
+Magic	Fantasy
+Management	Management
+Mars	/
+Martial Arts	Fighting
+Massively Multiplayer	Multiplayer
+Match 3	Cozy
+Mature	NSFW
+Mechs	Action # Sci-fi
+Medical Sim	Simulator
+Medieval	Medieval
+Memes	Comedy
+Metroidvania	Metroidvania
+Military	Action
+Mini Golf	Sport
+Minigame Collection	Compilation
+Minigames	Compilation
+Minimalist	/
+Mining	/
+Mod	/
+Moddable	/
+Modern	/
+Motocross	Sport	
+Motorbike	Sport
+Mouse only	/
+Movie	Story Rich
+Multiplayer	Multiplayer
+Multiple Endings	/
+Music	Music
+Music-Based Procedural Generation	Music
+Music/Rhythm	Music # Rhythm
+Musou	/
+Mystery	Mystery
+Mystery Dungeon	Mystery
+Mythology	Mythology
+NSFW	NSFW
+Narration	Story Rich
+Narrative	Story Rich
+Nature	Cozy
+Naval	Action
+Naval Combat	Action # Combat
+Ninja	Action
+Noir	Investigation # Action
+Nonlinear	/
+Nostalgia	/
+Nudity	NSFW
+Offroad	Cozy
+Old School	Retro
+On-Rails Shooter	On-Rails Shooter
+Online Co-Op	Co-op # Multiplayer
+Open World	Open World
+Open World Survival Craft	Open World # Crafting
+Otome	/
+Outbreak Sim	Simulator
+Parkour	Sport
+Parody	Comedy 
+Party	Party
+Party Game	Party
+Party-Based RPG	RPG
+Perma Death	/
+Philosophical	/
+Photo Editing	/
+Physics	/
+Pinball	Retro
+Pirates	/
+Pixel Graphics	Pixel Graphics
+Platform	Platformer
+Platformer	Platformer
+Point & Click	Point & Click
+Point-and-click	Point & Click
+Political	Strategy
+Political Sim	Simulator
+Politics	/
+Post-apocalyptic	Post-apocalyptic
+Precision Platformer	Platformer
+Procedural Generation	Procedural Generation
+Programming	Simulator
+Psychedelic	Psychological	
+Psychological	Psychological
+Psychological Horror	Psychological # Horror
+Puzzle	Puzzle
+Puzzle Platformer	Puzzle # Platformer
+PvE	Multiplayer
+PvP	Multiplayer
+Quick-Time Events	Action
+Quiz/Trivia	Puzzle
+RPG	RPG
+RPGMaker	Simulator
+RTS	RTS
+Racing	Racing
+Real Time Strategy (RTS)	RTS
+Real Time Tactics	Real-Time Tactics
+Real-Time	Real-Time
+Real-Time Strategy	RTS
+Real-Time with Pause	Real-Time with Pause
+Realistic	Realistic
+Reboot	Remake
+Relaxing	Cozy
+Remake	Remake
+Replay Value	/
+Resource Management	Management
+Retro	Retro
+Rhythm	Rhythm
+Robots	Sci-fi
+Rock Music	Music
+Roguelike	Roguelike
+Roguelike Deckbuilder	Roguelike # Deckbuilder
+Roguelite	Roguelite
+Roguevania	Roguelike # Metroidvania
+Role-Playing	RPG
+Role-playing (RPG)	RPG
+Romance	Romance
+Rome	Historical
+Runner	Action # Adventure
+Sailing	Sport
+Sandbox	Sandbox
+Satire	/
+Sci-fi	Sci-fi
+Science	/
+Score Attack	Arcade
+Sequel	/
+Sexual Content	NSFW
+Shoot 'Em Up	Shoot 'Em Up
+Shooter	Shooter
+Shop Keeper	Management
+Short	/
+Side Scroller	Side Scroller
+Silent Protagonist	/
+Simulation	Simulator
+Simulator	Simulator
+Singleplayer	/
+Skateboarding	Sport
+Skating	Sport
+Skiing	Sport
+Sniper	Action # Stealth
+Snow	/
+Snowboarding	Sport
+Snowboarding/Skiing	Sport
+Soccer	Sport
+Social Deduction	Puzzle
+Software	Simulator
+Sokoban	/
+Solitaire	Deckbuilder
+Souls-like	Souls-like
+Soundtrack	Music
+Space	Sci-fi
+Space Sim	Simulator
+Spaceships	Sci-fi
+Spectacle fighter	Fighting
+Spelling	Typing
+Split Screen	Co-op
+Sport	Sport
+Sports	Sport
+Stealth	Stealth
+Steampunk	Steampunk
+Story Rich	Story Rich
+Strategy	Strategy
+Strategy RPG	Strategy # RPG
+Stylized	Art
+Submarine	Action
+Superhero	Superhero
+Supernatural	Sci-fi # Horror
+Surreal	/
+Survival	Survival
+Survival Horror	Survival # Horror
+Swordplay	Action # Medieval
+Tabletop	Board Game
+Tactical	Tactical
+Tactical RPG	RPG # Tactical
+Tanks	Action
+Team-Based	/
+Tennis	Sport
+Text Adventure	Story Rich
+Text-Based	Story Rich
+Third Person	Third Person
+Third-Person Shooter	Third Person # Shooter
+Thriller	Thriller
+Time Attack	Action # Management
+Time Management	Management
+Time Manipulation	Management
+Time Travel	Adventure
+Top-Down	Top-Down
+Top-Down Shooter	Top-Down # Shooter
+Touch-Friendly	Cozy
+Tower Defense	Action # Strategy # Tactical
+Track & Field	Simulator
+Trading	Card Game
+Trading Card Game	Card Game
+Traditional Roguelike	Roguelike
+Trains	Simulator
+Transhumanism	/
+Transportation	Simulator
+Trivia	Puzzle
+Trivia/Board Game	Puzzle # Board Game
+Turn-Based	Turn-Based
+Turn-Based Combat	Turn-Based # Combat
+Turn-Based Strategy	Turn-Based # Strategy
+Turn-Based Tactics	Turn-Based # Tactical
+Turn-based strategy (TBS)	Turn-Based # Strategy
+Tutorial	/
+Twin Stick Shooter	Twin Stick Shooter
+Typing	Typing
+Underground	/
+Underwater	/
+Unforgiving	/
+VR	VR
+Vampire	Fantasy
+Vehicular Combat	Vehicular Combat
+Vikings	Historical
+Villain Protagonist	/
+Violent	Gore
+Visual Novel	Visual Novel
+Voice Control	/
+Voxel	/
+Walking Simulator	Simulator
+War	Action # Historical
+Wargame	Action # Historical
+Warhammer 40K	/
+Well-Written	Story Rich
+Werewolves	Fantasy
+Western	/
+Wholesome	Wholesome
+Word Game	Action # Historical
+World War I	Action # Historical
+World War II	Action # Historical
+Wrestling	Sport
+Zombies	Zombies
+eSports	Sport

@@ -100,7 +100,12 @@ def get_best_match(candidates, title, title_year=0, candidates_years=None):
     return best_index, best_match, best_score
 
 
-def get_soup(url, cloud_scrapper=False, steam=False):
+def get_soup(url, cloud_scrapper=False, steam=False, is_stored=False):
+    if is_stored:
+        with open(url, 'r', encoding='utf-8') as file:
+            page = file.read()
+        return BeautifulSoup(page, 'html.parser')
+
     if steam:
         webpage = requests.get(url, headers=headers, cookies=cookies)
     elif cloud_scrapper:
@@ -166,13 +171,13 @@ def get_score_color(score, score_base):
     except Exception as _:
         pass
     return 'red'
-    
 
-def organise_game_data(game_obj, all_games):
+
+def organise_game_data(game_obj, all_games, genres_dict):
     new_obj = dict()
 
     genres = set()
-    similar_games = []
+    similar_games = set()
     release_date = []
     new_obj['sites'] = set()
     scores = dict()
@@ -208,21 +213,29 @@ def organise_game_data(game_obj, all_games):
             continue
         
         if '-genres' in key and 'moby' not in key:
-            genres.update(val.split('; '))
+            if type(val) == list:
+                genres.update(set(val))
+            else:
+                genres.update(val.split('; '))
             continue
 
-        '''
         if 'similar-titles' in key or 'similar_games' in key:
             for title in val.split('; '):
                 if title in all_games:
-                    similar_games.append(title)
+                    similar_games.add(title)
             continue
-        '''
-        
+    
+    new_genres = set()
     if len(genres) > 0:
         new_obj['Genres'] = list(genres)
+        for genre in new_obj.get('Genres', []):
+            if genre in genres_dict and genres_dict[genre][0] != '/':
+                new_genres.update({g for g in genres_dict[genre]})
+    
+        game_obj['Top Genres'] = sorted(new_genres)
+
     if len(similar_games) > 0:
-        new_obj['Similar Games'] = similar_games
+        new_obj['Similar Games'] = list(similar_games)
     if len(release_date) > 0:
         new_obj['Release Date'] = release_date
     new_obj['sites'] = sorted(new_obj['sites'])
@@ -233,6 +246,7 @@ def organise_game_data(game_obj, all_games):
 
 
 def organise_game_frontend(game_obj):
+
     new_game_obj = {'title': game_obj['title']}
     base_scores = {'metacritics-critics': 100, 'metacritics-users': 10, 'steam-positive': 100, 
                 'backloggd-rating': 5, 'igdb-rating': 100, 'moby-internal-score': 10, 'rawg-score': 5}
@@ -273,10 +287,18 @@ def organise_game_frontend(game_obj):
         new_game_obj['scores'] = scores
 
     # Genres
-    key = 'Genres'
+    key = 'Top Genres'
     if key in game_obj and len(game_obj[key]) > 0:
         new_game_obj[key] = game_obj[key]
-    
+
+    release_date = []
+    for key, val in game_obj.items():
+        if 'release-date' in key:
+            release_date.append(val)
+            continue
+    if len(release_date) > 0:
+        game_obj['Release Date'] = release_date
+
     key = 'Release Date'
     if key in game_obj and len(game_obj[key]) > 0:
         new_game_obj[key] = game_obj[key][0] if game_obj[key][0] != '' else game_obj[key][1]
@@ -310,14 +332,17 @@ def organise_game_frontend(game_obj):
         cover = 'Covers New/blank Cover.jpg'
     new_game_obj['cover'] = cover
 
-    ch = game_obj['title'][0].upper()
-    if ch not in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
-        ch = '#'
     image_list = []
-    for ind in range(1, 21):
-        img_path = 'Temp/' + ch + '/' + game_obj['path'] + ' ' + str(ind) + '.jpg'
-        if os.path.exists('static/' + img_path):
-            image_list.append(img_path)
+    if 'selected_images' in game_obj and len(game_obj['selected_images']) > 0:
+        image_list = game_obj['selected_images']
+    else:
+        ch = game_obj['title'][0].upper()
+        if ch not in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
+            ch = '#'
+        for ind in range(1, 21):
+            img_path = 'Temp/' + ch + '/' + game_obj['path'] + ' ' + str(ind) + '.jpg'
+            if os.path.exists('static/' + img_path):
+                image_list.append(img_path)
     new_game_obj['gallery'] = image_list
 
     if 'backloggd-split-rating' in game_obj:

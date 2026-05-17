@@ -20,18 +20,19 @@
         <div class="panel info-panel">
             <h1>{{ game['title'] }}
                 <a href="/crawl/{{ game['title'] }}" class="edit-link"><i class="fa-solid fa-spider"></i></a>
+                <a href="/edit/{{ game['title'] }}" class="edit-link"><i class="fa-solid fa-pen"></i></a>
             </h1>
             <img src="{{ url_for('static', filename=game['cover']) }}" alt="{{ game['title'] }} Cover" 
                 onclick="showCover(this.src)" style="cursor: pointer; margin:5px" loading="lazy">
             
             {% if 'Release Date' in game %}
-                <p><strong>Release Date:</strong> {{game['Release Date']}}</p>
+                <p><strong>Release Date:</strong> <span class="widget-tab active">{{game['Release Date']}}</span></p>
             {% endif %}
-            {% if 'Genres' in game %}
+            {% if 'Top Genres' in game %}
             <p><strong>Genres:</strong></p>
             <div class="widget-tabs" style="text-align: justify">
-                {% for tag in game['Genres'][:5] %}
-                    <span class="widget-tab">{{tag.title()}}</span>
+                {% for tag in game['Top Genres'][:10] %}
+                    <span class="widget-tab active">{{tag.title()}}</span>
                 {% endfor %}
             </div>
             {% endif %}
@@ -212,7 +213,7 @@
             </div>
             <div class="image-slider" id="image-slider">
             {% for img_url in game['gallery'] %}
-                <img src="{{ url_for('static', filename=img_url) }}" alt="Gallery Image" onclick="showlightbox(this.src)" loading="lazy">
+                <img src="{{ img_url }}" alt="Gallery Image" onclick="showlightbox(this.src)" loading="lazy">
             {% endfor %}
             </div>
         </div>

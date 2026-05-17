@@ -115,7 +115,11 @@ class RawgCrawler(Crawler):
         soup = get_soup(url)
         time.sleep(1)
         res_obj['rawg-url'] = url
-        res_obj['rawg-description'] = soup.find('div', {'class': 'game__about-text'}).text
+        res_obj['rawg-description'] = '#'
+        try:
+            res_obj['rawg-description'] = soup.find('div', {'class': 'game__about-text'}).text
+        except Exception as _:
+            pass
         raw_page = soup.find('main', {'class': 'page__content'})
         res_obj['rawg-raw'] = str(raw_page)
 

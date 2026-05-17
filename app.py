@@ -1,15 +1,16 @@
 import os
 import zlib
+import json
 import random
 import string
 from util.crawl_helper import CrawlHelper
 from util.image_utility import ImageUtility
-from util.utility import get_mongo_collection, organise_game_frontend
+from util.utility import get_mongo_collection, organise_game_frontend, organise_game_data
 from flask import Flask, render_template, jsonify, request, redirect, url_for
 
 from langchain_chroma import Chroma
-from langchain_ollama import OllamaLLM
-from langchain.chains import RetrievalQA
+# from langchain_ollama import OllamaLLM
+# from langchain.chains import RetrievalQA
 from langchain_huggingface import HuggingFaceEmbeddings
 
 app = Flask(__name__)
@@ -67,6 +68,70 @@ def home():
     )
 
 
+@app.route('/media')
+def media():
+    games = list(get_mongo_collection().find({}, {'title': 1, 'Intro': 1, 'selected_images': 1,
+                                                   'path': 1, '_id': 0}).sort('title', 1))
+
+    game = games[0]
+    cover = 'Covers New/' + game['path'] + ' Cover.jpg'
+    if not os.path.exists('static/' + cover):
+        cover = 'Covers New/blank Cover.jpg'
+    game['cover'] = cover
+
+    ch = game['title'][0].upper()
+    if ch not in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
+        ch = '#'
+    image_list = []
+    if 'selected_images' in game and len(game['selected_images']) > 0:
+        image_list = game['selected_images']
+    else:
+        ch = game['title'][0].upper()
+        if ch not in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
+            ch = '#'
+        for ind in range(1, 21):
+            img_path = 'Temp/' + ch + '/' + game['path'] + ' ' + str(ind) + '.jpg'
+            if os.path.exists('static/' + img_path):
+                image_list.append(img_path)
+    game['gallery'] = image_list
+
+    return render_template(
+        "media.html",
+        games=games,
+        game=game
+    )
+
+
+@app.route('/media/<game_title>')
+def game_media(game_title):
+    print(game_title)
+    game = get_mongo_collection().find_one({'title': game_title}, {'title': 1, 'Intro': 1, 'selected_images': 1, 'path': 1, '_id': 0})
+    cover = 'Covers New/' + game['path'] + ' Cover.jpg'
+    if not os.path.exists('static/' + cover):
+        cover = 'Covers New/blank Cover.jpg'
+    game['cover'] = cover
+
+    ch = game['title'][0].upper()
+    if ch not in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
+        ch = '#'
+    image_list = []
+    if 'selected_images' in game and len(game['selected_images']) > 0:
+        image_list = game['selected_images']
+    else:
+        ch = game['title'][0].upper()
+        if ch not in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
+            ch = '#'
+        for ind in range(1, 21):
+            img_path = 'Temp/' + ch + '/' + game['path'] + ' ' + str(ind) + '.jpg'
+            if os.path.exists('static/' + img_path):
+                image_list.append(img_path)
+    game['gallery'] = image_list
+
+    if game:
+        return jsonify(game)
+    return jsonify({'error': 'not found'}), 404
+
+
 @app.route('/game/<game_title>')
 def game_detail(game_title):
 
@@ -100,6 +165,30 @@ def crawl():
     return jsonify(results)
 
 
+@app.route('/edit/<game_title>', methods=["GET", "POST"])
+def edit_document(game_title):
+    temp_title = game_title
+    if request.method == "POST":
+        raw_json = request.form["json_data"]
+
+        try:
+            updated_doc = json.loads(json.loads(raw_json))
+            temp_title = updated_doc.get('title', game_title)
+            get_mongo_collection().update_one(
+                {"title": game_title},
+                {'$set': updated_doc}
+            )
+        except Exception as e:
+            return f"Invalid JSON: {e}", 400
+
+    game = get_mongo_collection().find_one({'title': temp_title}, 
+                                           {'title': 1, 'platform': 1, 'franshise': 1, 'path': 1, '_id': 0,
+                                            'Genres': 1, 'Release Date': 1, 'Top Genres': 1, 'new_title': 1,
+                                            'Similar Games': 1, 'Developers': 1, 'Publishers': 1})
+    front_end_game = organise_game_frontend(game)
+    return render_template('edit.html', game=front_end_game, json_data=json.dumps(game, indent=2))
+
+
 @app.route("/save_game_data", methods=["POST"])
 def save_game_data():
     
@@ -116,15 +205,30 @@ def save_game_data():
         if key.endswith('-raw'):
             new_dict[key] = zlib.compress(str(val).encode('utf8'))
     
-    get_mongo_collection().update_one({'title': new_dict['title']}, {'$set': new_dict})
-    for key in list(data.keys()):
-        game_obj = get_mongo_collection().find_one({'title': new_dict['title']})
-        if json_obj['pictures_check'] or json_obj['cover_check']:
-            image_util = ImageUtility()
-            image_util.download_images(game_obj=game_obj, download_images=json_obj['pictures_check'],
-                                       download_cover=json_obj['cover_check'])
-        break
+    
+    # for key in list(data.keys()):
+    game_obj = get_mongo_collection().find_one({'title': new_dict['title']})
+    if json_obj['pictures_check'] or json_obj['cover_check']:
+        image_util = ImageUtility()
+        selected_images = image_util.download_images(game_obj=game_obj, download_images=json_obj['pictures_check'],
+                                    download_cover=json_obj['cover_check'])
+        new_dict['selected_images'] = selected_images
+    game_obj.update(new_dict)
+    all_games_titles = get_mongo_collection().distinct('title')
 
+    ###############################################################################
+    # To change: save genres dict in a more efficient way and not read from txt every time
+    with open ('Genres.txt', 'r', encoding='utf-8') as file:
+        accepted_genres = file.readlines()
+    genres_dict = dict()
+    for line in accepted_genres:
+        line = line.replace('\n', '')
+        split_line = line.split('\t')
+        orig_genre, genre_list = split_line[0], split_line[1].split(' # ')
+        genres_dict[orig_genre] = genre_list
+    ###############################################################################
+    game_obj.update(organise_game_data(game_obj, all_games_titles, genres_dict))
+    get_mongo_collection().update_one({'title': game_obj['title']}, {'$set': game_obj})
     return jsonify({'success': True})
 
 
@@ -163,7 +267,7 @@ def search():
     per_page = 54
     page = int(request.args.get('page', 1))
 
-    genres = get_mongo_collection().distinct('Genres')
+    genres = get_mongo_collection().distinct('Top Genres')
     genres = set([v.strip() for v in genres if len(v) > 1])
     developers  = get_mongo_collection().distinct('Developers')
     developers  = set([v.strip() for v in developers if len(v) > 1])
@@ -247,7 +351,7 @@ def build_advance_search_query(form):
     # Genres
     genres_selected = form.getlist('genres')
     if genres_selected:
-        query['Genres'] = {'$in': genres_selected}
+        query['Top Genres'] = {'$in': genres_selected}
 
     # Developers
     devs_entry = form.get('developers')
@@ -259,6 +363,11 @@ def build_advance_search_query(form):
     if pubs_entry:
         query['Publishers'] = {'$regex': pubs_entry, '$options': 'i'}
 
+    # Platform
+    platform = form.get('platform')
+    if platform:
+        query['platform'] = platform
+
     # Release date
     start = form.get('release_start')
     end = form.get('release_end')
@@ -269,10 +378,6 @@ def build_advance_search_query(form):
         if end:
             release_range['$lte'] = end
         query['Release Date.0'] = release_range
-
-    # Retro
-    if form.get('retro'):
-        query['Retro'] = True
 
     # Score (normalize to 0–1 scale)
     score_input = form.get('score_min')
@@ -354,4 +459,4 @@ def search_ai():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)

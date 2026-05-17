@@ -1,5 +1,6 @@
 import re
 import zlib
+import json
 from crawlers.crawler import Crawler
 from util.utility import get_soup, get_best_match
 
@@ -76,7 +77,7 @@ class SteamCrawler(Crawler):
         steam_images = []
         if steam_score >= self.accepted_score:
             try:
-                soup = get_soup(url, steam=True)
+                soup = get_soup(url, steam=True, cloud_scrapper=True)
                 steam_description = soup.find('div', {'class': 'game_description_snippet'})
                 if steam_description is not None:
                     steam_description = steam_description.text
@@ -140,12 +141,15 @@ class SteamCrawler(Crawler):
                 steam_tags = soup.find('div', {'class': ['glance_tags', 'popular_tags']}).find_all('a')
                 steam_tags = '; '.join([a.text.replace('\t', '').replace('\n', '') for a in steam_tags])
 
-                screenshot_divs = soup.find_all('div', {'class': 'screenshot_holder'})
-                for sc_shot_div in screenshot_divs:
-                    image_src = sc_shot_div.find('a').attrs['href']
-                    steam_images.append(image_src)
-                dev_list_div = soup.find('div', {'id': 'developers_list'})
+                # screenshot_divs = soup.find_all('div', {'class': 'screenshot_holder'})
+                screenshot_divs = soup.find('div', {'class': 'gamehighlight_desktopcarousel'})
+                screenshot_divs = screenshot_divs.attrs['data-props']
+                screenshots = json.loads(screenshot_divs)['screenshots']
+                for screenshot in screenshots:
+                    if 'full' in screenshot:
+                        steam_images.append(screenshot['full'])
                 
+                dev_list_div = soup.find('div', {'id': 'developers_list'})
                 found_dev_list = []
                 dev_list_urls = dev_list_div.find_all('a')
                 for link in dev_list_urls:

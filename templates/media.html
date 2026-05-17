@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/x-icon" href="../static/logo.png">
+    <title>Media</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.5/awesomplete.min.css" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/game_page.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/media.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.5/awesomplete.min.js"></script>
+
+</head>
+<body>
+    <!-- Header -->
+    {% include "header.html" %}
+    
+    <div class="content">
+        <!-- Left: Cover -->
+        <div class="panel info-panel" style="width: 20%; height: 85vh;">
+            <h1>{{ game['title'] }}</h1>
+            <img src="{{ url_for('static', filename=game['cover']) }}" alt="{{ game['title'] }} Cover" id="game-cover"
+                onclick="showCover(this.src)" style="cursor: pointer; margin:5px" loading="lazy">
+        </div>
+
+        <!-- Center: Titles -->
+        <div style="width: 25%; ">
+            <div class="panel main-panel" style="height: 85vh;">
+                <!-- <input type="text" id="game-search" placeholder="Search games..." /> -->
+                <ul id="game-list">
+                    {% for g in games %}
+                    <li class="game-item {% if loop.first %}active{% endif %}"
+                        data-id="{{ g.title }}">
+                        {{ g.title }} <a href="/game/{{ g.title }}" ><i class="fa-solid fa-link"></i></a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+                
+        </div>
+
+        <!-- Right: Screenshots -->
+        <div style="width: 55%;" class="panel">
+            <div>
+                <img src="{{ game['gallery'][0] }}"
+                alt="Screenshot" style="margin:5px; width: 100%; height: 60vh;" loading="lazy">
+            </div>
+            <div class="image-slider" id="image-slider">
+                {% for img_url in game['gallery'] %}
+                    <img src="{{ img_url }}" alt="Gallery Image" onclick="showlightbox(this.src)" loading="lazy">
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+
+        const gameItems = Array.from(document.querySelectorAll(".game-item"));
+        let currentGameIndex = 0;
+
+        const slider = document.getElementById("image-slider");
+        let sliderImages = [];
+        let currentImageIndex = 0;
+ 
+        
+        function highlightGame(index) {
+            gameItems.forEach(li => li.classList.remove("active"));
+            gameItems[index].classList.add("active");
+        }
+
+
+        async function loadGame(index) 
+        {
+            const gameId = gameItems[index].dataset.id;
+
+            const res = await fetch(`/media/${encodeURIComponent(gameId)}`);
+            if (!res.ok) return;
+
+            const game = await res.json();
+
+            // LEFT PANEL
+            document.querySelector(".info-panel h1").textContent = game.title;
+            document.getElementById("game-cover").src = `/static/${encodeURIComponent(game.cover)}`;
+
+            // RIGHT PANEL – main image
+            const mainImg = document.querySelector(".panel img[alt='Screenshot']");
+            mainImg.src = game.gallery[0];
+
+            // RIGHT PANEL – slider
+            slider.innerHTML = "";
+            game.gallery.forEach((img, i) => {
+                const el = document.createElement("img");
+                el.src = img;
+                el.onclick = () => selectImage(i);
+                slider.appendChild(el);
+            });
+
+            sliderImages = Array.from(slider.querySelectorAll("img"));
+            currentImageIndex = 0;
+
+            highlightGame(index);
+            currentGameIndex = index;
+        }
+
+        function selectImage(index) {
+            if (!sliderImages.length) return;
+
+            currentImageIndex = (index + sliderImages.length) % sliderImages.length;
+
+            const mainImg = document.querySelector(".panel img[alt='Screenshot']");
+            mainImg.src = sliderImages[currentImageIndex].src;
+        }
+
+        gameItems.forEach((item, index) => {
+            item.addEventListener("click", () => loadGame(index));
+        });
+
+        document.addEventListener("keydown", e => {
+
+            // GAME navigation
+            if (e.key === "ArrowUp") {
+                e.preventDefault();
+                loadGame((currentGameIndex - 1 + gameItems.length) % gameItems.length);
+            }
+
+            if (e.key === "ArrowDown") {
+                e.preventDefault();
+                loadGame((currentGameIndex + 1) % gameItems.length);
+            }
+
+            // IMAGE navigation
+            if (e.key === "ArrowLeft") {
+                e.preventDefault();
+                selectImage(currentImageIndex - 1);
+            }
+
+            if (e.key === "ArrowRight") {
+                e.preventDefault();
+                selectImage(currentImageIndex + 1);
+            }
+        });
+
+
+        document.querySelectorAll(".redirect").forEach(img => {
+            img.style.cursor = "pointer";
+            img.addEventListener("click", () => {
+            window.location.href = img.dataset.url;
+            });
+        });
+
+    </script>
+    <script src="{{ url_for('static', filename='scripts/base.js') }}"></script>
+</body>
+</html>

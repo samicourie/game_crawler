@@ -1,0 +1,17 @@
+.game-item {
+    cursor: pointer;
+    padding: 6px;
+}
+
+.game-item.active {
+    background-color: rgba(22, 78, 134, 0.6);
+    color: sandybrown;
+    font-weight: bold;
+}
+
+#game-search {
+    width: 100%;
+    padding: 6px;
+    margin-bottom: 6px;
+    box-sizing: border-box;
+}

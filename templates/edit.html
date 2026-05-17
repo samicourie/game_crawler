@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/x-icon" href="../static/logo.png">
+    <title>{{ game['title'] }}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.5/awesomplete.min.css" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/game_page.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/base.css') }}">
+    <link href="https://cdn.jsdelivr.net/npm/vanilla-jsoneditor/styles.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.5/awesomplete.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jquery.json-viewer/json-viewer/jquery.json-viewer.css">
+    <script src="https://cdn.jsdelivr.net/npm/jquery.json-viewer/json-viewer/jquery.json-viewer.js"></script>
+
+
+</head>
+<body>
+    <!-- Header -->
+    {% include "header.html" %}
+    
+    <div class="content">
+        <!-- Left: Cover & Info -->
+        <div class="panel info-panel" style="width:20%">
+            <h1 class="title"><a href="/game/{{ game['title'] }}">{{ game['title'] }}</a></h1>
+            <img src="{{ url_for('static', filename=game['cover']) }}" alt="{{ game['title'] }} Cover" 
+                onclick="showCover(this.src)" style="cursor: pointer; margin:5px" loading="lazy">
+        </div>
+        <div class="panel info-panel" style="width:55%">
+            <h2 style="margin:0;">
+                Game data
+            </h2>
+            <div id="editor" style="height: 600px;"></div>
+                <form method="POST" id="jsonForm">
+                    <input type="hidden" name="json_data" id="json_data">
+                    <button type="submit">Save</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="lightbox-bg" id="coverbox">
+            <img id="coverbox-img" src="" alt="Preview">
+        </div>
+    </div>
+
+    <script>
+        const lightbox = document.getElementById('coverbox');
+
+        lightbox.onclick = (e) => {
+            // Close only if background is clicked (not image or buttons)
+            if (e.target === lightbox) {
+                lightbox.style.display = 'none';
+                currentIndex = -1;
+            }
+        };
+
+        function showCover(src) 
+        {
+            const lightbox = document.getElementById('coverbox');
+            const img = document.getElementById('coverbox-img');
+            img.src = src;
+            lightbox.style.display = 'flex';
+        }
+
+        document.getElementById('coverbox').onclick = () => 
+        {
+            document.getElementById('coverbox').style.display = 'none';
+        }
+    </script>
+    <script src="{{ url_for('static', filename='scripts/base.js') }}"></script>
+    <script type="module">
+        import { JSONEditor } from 'https://cdn.jsdelivr.net/npm/vanilla-jsoneditor/+esm'
+
+        const editor = new JSONEditor({
+            target: document.getElementById('editor'),
+            props: {
+                content: {
+                    json: {{ json_data | tojson }}
+                }
+            }
+        })
+
+        document.getElementById('jsonForm').addEventListener('submit', () => {
+            const content = editor.get()
+            document.getElementById('json_data').value =
+                JSON.stringify(content.json)
+        })
+</script>
+</body>
+</html>

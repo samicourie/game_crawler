@@ -87,7 +87,7 @@ class MobyCrawler(Crawler):
                         json_obj['moby-developers'] = dd_elem.strip()
                         continue
 
-                temp_div = soup.find('div', {'class': 'info-score'})
+                temp_div = soup.find('div', {'class': 'info-scores'})
                 temp_dl = temp_div.find('dl')
                 temp_elems = temp_dl.find_all(recursive=False)
                 for el in range(0, len(temp_elems), 2):

@@ -107,6 +107,7 @@ class ImageUtility:
                 print(e)
 
     def download_images(self, game_obj, download_images=True, download_cover=True, nb_images=20):
+        selected_images = []
         game_title = game_obj['title']
         ch = game_title[0].upper()
         if ch not in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
@@ -120,7 +121,7 @@ class ImageUtility:
 
         if download_images:
             image_list = []
-            for image_key in ['giantbomb-screenshots', 'igdb-screenshots', 'steam-images']:
+            for image_key in ['giantbomb-screenshots', 'igdb-screenshots', 'steam-images', 'rawg-screenshots']:
                 if image_key in game_obj:
                     image_list.extend(game_obj[image_key])
             
@@ -129,7 +130,7 @@ class ImageUtility:
                     if lst[0] == 'Screenshot - Gameplay':
                         image_list.extend(lst[1:])
 
-            image_size = 50000
+            image_size = 40000
             if len(image_list) > 0:
                 random.shuffle(image_list)
                 count = 1
@@ -143,6 +144,7 @@ class ImageUtility:
                         img_embedding = self.get_embedding(pil_img)
 
                         if self.add_or_not(img_embedding, image_path):
+                            selected_images.append(img)
                             with open(image_path, 'wb') as img_file:
                                 img_file.write(response.content)
                                 count += 1
@@ -150,7 +152,40 @@ class ImageUtility:
                                     break
                     except Exception as e:
                         print(e)
+        return selected_images
 
+    def select_images(self, game_obj, nb_images=20):
+        selected_images = []
+        image_list = []
+        for image_key in ['giantbomb-screenshots', 'igdb-screenshots', 'steam-images']:
+            if image_key in game_obj:
+                image_list.extend(game_obj[image_key])
+        
+        if 'gamesdb-images' in game_obj:
+            for lst in game_obj['gamesdb-images'].values():
+                if lst[0] == 'Screenshot - Gameplay':
+                    image_list.extend(lst[1:])
+
+        image_size = 50000
+        if len(image_list) > 0:
+            random.shuffle(image_list)
+            count = 1
+            for img in image_list:
+                try:
+                    response = requests.get(img)
+                    if len(response.content) < image_size:
+                        continue
+                    pil_img = self.convert_url_img_to_pil(response)
+                    img_embedding = self.get_embedding(pil_img)
+
+                    if self.add_or_not(img_embedding, 'img' + str(count)):
+                        selected_images.append(img)
+                        count += 1
+                        if count > nb_images:
+                            break
+                except Exception as e:
+                    print(e)
+        return selected_images
 
 '''
 def orb_feature_similarity(img1, img2):

@@ -11,9 +11,9 @@ class GiantbombCrawler(Crawler):
 
     def __init__(self):
         super().__init__()
-        self.site = 'giantbomb'
+        self.site = "giantbomb"
         self.giantbomb_key = GIANTBOMB_KEY
-        self.gb = giantbomb.Api(self.giantbomb_key, 'API test')
+        self.gb = giantbomb.Api(self.giantbomb_key, "API test")
         self.names_dict = {'Giant Id': 'giantbomb-id', 'name': 'giantbomb-name', 'aliases': 'giantbomb-aliases', 'deck': 'giantbomb-intro',
                            'description': 'giantbomb-description', 'platforms': 'giantbomb-platforms', 'developers': 'giantbomb-developers',
                            'publishers': 'giantbomb-publishers', 'franchises': 'giantbomb-franchises', 'releases': 'giantbomb-releases', 
