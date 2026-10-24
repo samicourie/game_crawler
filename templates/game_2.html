@@ -14,25 +14,38 @@
 <body>
     <!-- Header -->
     {% include "header.html" %}
+    {%
+        set platofrm_dict = {
+            'PS4 / PS5': 'ps', 'PS1': 'ps1', 'PS2': 'ps2', 'PS3': 'ps3', 'PSP': 'psp', 'Wii U': 'wiiu',
+            'NS': 'ns', 'PC / Indie': 'indie', 'N64': 'n64', '3DS': 'ds3', 'DreamCast': 'dreamcast',
+            'PC': 'pc', 'GBA': 'gba', 'GC - Wii': 'gc', 'NDS': 'nds', 'SEGA': 'sega', 'SNES': 'snes'
+        }
+    %}
     
     <div class="content">
         <!-- Left: Cover & Info -->
         <div class="panel info-panel">
             <h1>{{ game['title'] }}
-                <a href="/crawl/{{ game['title'] }}" class="edit-link"><i class="fa-solid fa-spider"></i></a>
-                <a href="/edit/{{ game['title'] }}" class="edit-link"><i class="fa-solid fa-pen"></i></a>
+                <a href="/crawl/{{ game['title'] | urlencode }}" class="edit-link"><i class="fa-solid fa-spider"></i></a>
+                <a href="/edit/{{ game['title'] | urlencode }}" class="edit-link"><i class="fa-solid fa-pen"></i></a>
             </h1>
-            <img src="{{ url_for('static', filename=game['cover']) }}" alt="{{ game['title'] }} Cover" 
-                onclick="showCover(this.src)" style="cursor: pointer; margin:5px" loading="lazy">
+            <div class="cover-container">
+                <img src="{{ url_for('static', filename=game['cover']) }}"
+                    alt="{{ game['title'] }} Cover"
+                    onclick="showCover(this.src)"
+                    loading="lazy">
+
+                <span class="cover-label {{platofrm_dict[game['platform']]}}">{{game['platform']}}</span>
+            </div>
             
             {% if 'Release Date' in game %}
-                <p><strong>Release Date:</strong> <span class="widget-tab active">{{game['Release Date']}}</span></p>
+                <p><strong>Release Date:</strong> <span class="widget-tab-2 active">{{game['Release Date']}}</span></p>
             {% endif %}
             {% if 'Top Genres' in game %}
             <p><strong>Genres:</strong></p>
             <div class="widget-tabs" style="text-align: justify">
                 {% for tag in game['Top Genres'][:10] %}
-                    <span class="widget-tab active">{{tag.title()}}</span>
+                    <span class="widget-tab-2 active">{{tag.title()}}</span>
                 {% endfor %}
             </div>
             {% endif %}
@@ -42,7 +55,6 @@
                 {% for game in game['similar_games'] %}
                     <img src="{{ url_for('static', filename='Covers New/' + game['path'] + ' Cover.jpg') }}" 
                     class="redirect" data-url="/game/{{ game['title'] }}" alt="Similar Image">
-
                 {% endfor %}
                 </div>
             {% endif %}
@@ -76,13 +88,13 @@
                             {% set _ = all_tabs.append(tab) %}
                         {% endif %}
                         {% endfor %}
-                        {% for key in ['RAWG Achievements', 'Steam Achievements'] %}
+                        {% for key in ['Exophase Achievements', 'Steam Achievements'] %}
                         {% if key in game %}
                             {% set logo = key.split(' ')[0].lower() + '_logo.png' %}
                             {% set tab = {
                             "id": key,
                             "logo": logo,
-                            "label": key.split(' ')[0],
+                            "label": game['exophase-platform'],
                             "is_active": false,
                             "extra_logo": "achievement.png"
                             } %}
@@ -158,27 +170,28 @@
                     {% endif %}
                 {% endfor %}
                 
-                {% for key in ['RAWG Achievements', 'Steam Achievements'] %}
+                {% for key in ['Exophase Achievements', 'Steam Achievements'] %}
                     {% if key in game %}
                         <div id="{{key}}" class="widget-content">
                             <div class="achievements">
                                 {% for achievement in game[key] %}
-                                    <div class="achievement">
-                                        <div class="progress-bar">
-                                            <div class="progress-fill" style="width: {{ achievement['percent'].replace('%', '') }}%;"></div>
-                                        </div>
-
+                                    <div class="achievement {% if not achievement['description'] %}achievement-special{% endif %}">
+                                        {% if 'percentage' in achievement %}
+                                            <div class="progress-bar">
+                                                <div class="progress-fill" style="width: {{ achievement['percentage'].replace('%', '') }}%;"></div>
+                                            </div>
+                                        {% endif %}
                                         <div class="achievement-content">
                                             <img src="{{ achievement['image'] }}" 
-                                                alt="{{ achievement['name'] }}" 
+                                                alt="{{ achievement['title'] }}" 
                                                 class="achievement-icon">
                                             <div class="achievement-info">
-                                            <span class="achievement-name">{{ achievement['name'] }}</span>
-                                            <span class="achievement-percentage">{{ achievement['percent'].replace('%', '') }}%</span>
-                                            <p class="achievement-text">{{ achievement['description'] }}</p>
+                                                <span class="achievement-name  {% if not achievement['description'] %}achievement-name-sp{% endif %}">{{ achievement['title'] }}</span>
+                                                <span class="achievement-percentage">{{ achievement['percentage'] }}</span>
+                                                <p class="achievement-text">{{ achievement['description'] }}</p>
                                             </div>
                                         </div>
-                                    </div>
+                                </div>
                                 {% endfor %}
                             </div>
                         </div>
@@ -221,6 +234,39 @@
         <!-- Right: Scores -->
         <div class="panel score-panel">
             <h3 style="color: sandybrown;">Information</h3>
+            {% if game.get('my_score_1') is not none %}
+                {% set score = game['my_score_1']|float %}
+                {% set gold_fill = (score / 10 * 100, 100)|min %}
+                {% if score > 10 %}
+                    {% set platinum_fill = 50 if score <= 10.5 else 100 %}
+                {% else %}
+                    {% set platinum_fill = 0 %}
+                {% endif %}
+                <div class="score-row my-score-row">
+                    <img src="/static/logo.png" alt="logo" class="score-logo">
+                    <span class="score-label">My Logic Score</span>
+                    <span class="my-stars" data-tooltip="{{ score }} / 10">
+                        <span class="gold-stars" style="--fill: {{ gold_fill }}%">★★★★★</span>
+                        {% if platinum_fill > 0 %}<span class="platinum-star" style="--fill: {{ platinum_fill }}%">★</span>{% endif %}
+                    </span>
+                </div>
+
+            {% set score = game['my_score_2']|float %}
+                {% set gold_fill = (score / 10 * 100, 100)|min %}
+                {% if score > 10 %}
+                    {% set platinum_fill = 50 if score <= 10.5 else 100 %}
+                {% else %}
+                    {% set platinum_fill = 0 %}
+                {% endif %}
+                <div class="score-row my-score-row">
+                    <img src="/static/logo.png" alt="logo" class="score-logo">
+                    <span class="score-label">My Real Score</span>
+                    <span class="my-stars" data-tooltip="{{ score }} / 10">
+                        <span class="gold-stars" style="--fill: {{ gold_fill }}%">★★★★★</span>
+                        {% if platinum_fill > 0 %}<span class="platinum-star" style="--fill: {{ platinum_fill }}%">★</span>{% endif %}
+                    </span>
+                </div>
+            {% endif %}
             {% if 'scores' in game %}
                 {% for sc in game['scores'] %}
                     <!--<p>{{sc}}: <span class="score-box" style="background-color: {{game['scores'][sc][1]}}">{{game['scores'][sc][0]}}</span></p>-->
@@ -235,7 +281,7 @@
                 {% endfor %}
             {% endif %}
             
-            {% if 'backloggd-split-rating' in game %}
+            {% if 'backloggd-split-rating' in game and 'scores' in game %}
                 <div class="barplot-row">
                     <img src="{{ url_for('static', filename='backloggd_logo.png') }}" alt="{{sc}} logo" class="score-logo">
                     <span >Avg Rating: {{ game['scores'].get('Backloggd Rating', ['/'])[0] }}</span>
@@ -374,6 +420,7 @@
             // Your existing logic to showTab content
             showTab(id);
             }
+
     </script>
     <script src="{{ url_for('static', filename='scripts/base.js') }}"></script>
 </body>

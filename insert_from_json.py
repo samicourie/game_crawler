@@ -1,11 +1,11 @@
 import json
 import zlib
-import pymongo
+
+from util.utility import get_mongo_collection
 
 
 if __name__ == "__main__":
-    myclient = pymongo.MongoClient('mongodb://localhost:27017/')
-    mycol = myclient['local']['MyGames']
+    mycol = get_mongo_collection()
 
     all_games_titles = {v['title'] for v in mycol.find({}, {'_id': 0, 'title': 1})}
 
@@ -15,7 +15,7 @@ if __name__ == "__main__":
     for game in new_games:
         if game in all_games_titles:
             print(game, 'already in database')
-
+    
     with open ('Genres.txt', 'r', encoding='utf-8') as file:
         accepted_genres = file.readlines()
 
@@ -36,20 +36,16 @@ if __name__ == "__main__":
         game_obj['Top Genres'] = sorted(new_genres)
 
     for game, game_obj in new_games.items():
-        similar_games = []
         for key, value in game_obj.items():
             if '-raw' in key:
                 game_obj[key] =  zlib.compress(str(value).encode('utf8'))
-        
-            if 'similar-titles' in key or 'similar_games' in key:
-                for title in value.split('; '):
-                    if title in all_games_titles or title in new_games:
-                        similar_games.append(title)
-                continue
 
-        if len(similar_games) > 0:
-            game_obj['Similar Games'] = similar_games
 
+        if game.startswith('The '):
+            new_title = game[4:] + ', The'
+            game_obj['new_title'] = new_title
+        else:
+            game_obj['new_title'] = game
         
         if game in all_games_titles:
             mycol.update_one({'title': game}, {'$set': game_obj})
@@ -57,7 +53,9 @@ if __name__ == "__main__":
             mycol.insert_one(game_obj)
       
     for game, game_obj in new_games.items():
-        print(game, '#', game_obj.get('platform'), '#', game_obj.get('franchise', ''), '#',
+        print(game_obj['new_title'], '#', 
+            game_obj.get('platform', ''), '#',
+            game_obj.get('franchise', ''), '#',
             game_obj.get('Release Date', [None])[0], '#',
             game_obj.get('metacritics-critics', '/'), '#',
             game_obj.get('metacritics-users', '/'), '#',

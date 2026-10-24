@@ -32,7 +32,7 @@
                     {% for g in games %}
                     <li class="game-item {% if loop.first %}active{% endif %}"
                         data-id="{{ g.title }}">
-                        {{ g.title }} <a href="/game/{{ g.title }}" ><i class="fa-solid fa-link"></i></a>
+                        {{ g.title }} <a href="/game/{{ g.title | urlencode }}" ><i class="fa-solid fa-link"></i></a>
                     </li>
                     {% endfor %}
                 </ul>

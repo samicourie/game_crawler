@@ -212,11 +212,12 @@ def save_game_data():
         image_util = ImageUtility()
         selected_images = image_util.download_images(game_obj=game_obj, download_images=json_obj['pictures_check'],
                                     download_cover=json_obj['cover_check'])
-        new_dict['selected_images'] = selected_images
+        if len(selected_images) > 0:
+            new_dict['selected_images'] = selected_images
     game_obj.update(new_dict)
     all_games_titles = get_mongo_collection().distinct('title')
 
-    ###############################################################################
+    #######################################################################################
     # To change: save genres dict in a more efficient way and not read from txt every time
     with open ('Genres.txt', 'r', encoding='utf-8') as file:
         accepted_genres = file.readlines()
@@ -226,7 +227,7 @@ def save_game_data():
         split_line = line.split('\t')
         orig_genre, genre_list = split_line[0], split_line[1].split(' # ')
         genres_dict[orig_genre] = genre_list
-    ###############################################################################
+    #######################################################################################
     game_obj.update(organise_game_data(game_obj, all_games_titles, genres_dict))
     get_mongo_collection().update_one({'title': game_obj['title']}, {'$set': game_obj})
     return jsonify({'success': True})

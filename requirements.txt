@@ -2,6 +2,7 @@
 torch
 torchvision
 scikit-learn
+
 # Web framework
 flask
 
@@ -28,6 +29,7 @@ pandas
 numpy
 tqdm
 dacite
+opencv-python
 
 # Dashboard and visualization
 streamlit

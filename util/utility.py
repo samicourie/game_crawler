@@ -7,6 +7,7 @@ import pymongo
 import requests
 import unicodedata
 import cloudscraper
+import numpy as np
 from bs4 import BeautifulSoup
 
 
@@ -15,7 +16,7 @@ alphabet = list(string.ascii_uppercase)
 headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) '
               'AppleWebKit/537.36 (KHTML, like Gecko) '
               'Chrome/50.0.2661.102 Safari/537.36'}
-cookies = {'birthtime': '631148401'}
+cookies = {'birthtime': '631148401', 'wants_mature_content': '1'}
 
 
 words_subs = {'1': ['i', 'one', '1'], 'one': ['i', 'one', '1'], 'i': ['i', 'one', '1'],
@@ -48,6 +49,8 @@ def get_best_match(candidates, title, title_year=0, candidates_years=None):
     best_index = 0
     best_score = 0
     best_year = 100
+
+    best_indexes = []
     title_year = int(title_year)
     title_words = format_string(title)
     
@@ -85,8 +88,10 @@ def get_best_match(candidates, title, title_year=0, candidates_years=None):
                 best_match = nb_common_words
                 best_score = nb_smaller_words
                 best_index = ind
+                best_indexes = [best_index]
                 best_year = abs(title_year - candidate_year)
             elif nb_common_words == best_match:
+                best_indexes.append(ind)
                 temp_year = abs(title_year - candidate_year)
                 if temp_year < best_year:
                     best_year = temp_year
@@ -97,7 +102,7 @@ def get_best_match(candidates, title, title_year=0, candidates_years=None):
         except Exception as _:
             continue
 
-    return best_index, best_match, best_score
+    return best_index, best_match, best_score, best_indexes
 
 
 def get_soup(url, cloud_scrapper=False, steam=False, is_stored=False):
@@ -177,7 +182,6 @@ def organise_game_data(game_obj, all_games, genres_dict):
     new_obj = dict()
 
     genres = set()
-    similar_games = set()
     release_date = []
     new_obj['sites'] = set()
     scores = dict()
@@ -218,12 +222,6 @@ def organise_game_data(game_obj, all_games, genres_dict):
             else:
                 genres.update(val.split('; '))
             continue
-
-        if 'similar-titles' in key or 'similar_games' in key:
-            for title in val.split('; '):
-                if title in all_games:
-                    similar_games.add(title)
-            continue
     
     new_genres = set()
     if len(genres) > 0:
@@ -234,8 +232,9 @@ def organise_game_data(game_obj, all_games, genres_dict):
     
         game_obj['Top Genres'] = sorted(new_genres)
 
+    similar_games = filter_similar_games(game_obj, all_games)
     if len(similar_games) > 0:
-        new_obj['Similar Games'] = list(similar_games)
+        new_obj['similar_games_sites'] = list(similar_games)
     if len(release_date) > 0:
         new_obj['Release Date'] = release_date
     new_obj['sites'] = sorted(new_obj['sites'])
@@ -303,17 +302,22 @@ def organise_game_frontend(game_obj):
     if key in game_obj and len(game_obj[key]) > 0:
         new_game_obj[key] = game_obj[key][0] if game_obj[key][0] != '' else game_obj[key][1]
 
-    key = 'rawg-achievements'
-    if key in game_obj and len(game_obj[key]) > 0:
-        new_game_obj['RAWG Achievements'] = game_obj[key]
+    # key = 'rawg-achievements'
+    # if key in game_obj and len(game_obj[key]) > 0:
+    #     new_game_obj['RAWG Achievements'] = game_obj[key]
 
     key = 'psnprofiles-achievements'
     if key in game_obj and len(game_obj[key]) > 0:
         new_game_obj['Trophies'] = game_obj[key]
 
-    key = 'steam-achievements'
+    key = 'exophase-achievements'
     if key in game_obj and len(game_obj[key]) > 0:
-        new_game_obj['Steam Achievements'] = game_obj[key]
+        new_game_obj['Exophase Achievements'] = game_obj[key]
+        new_game_obj['exophase-platform'] = game_obj['exophase-platform']
+
+    # key = 'steam-achievements'
+    # if key in game_obj and len(game_obj[key]) > 0:
+    #     new_game_obj['Steam Achievements'] = game_obj[key]
 
     new_game_obj['sites'] = set()
     for key in ['backloggd-description', 'gamesdb-description', 'giantbomb-intro', 'giantbomb-description', 
@@ -375,7 +379,185 @@ def organise_game_frontend(game_obj):
     # if 'rawg-raw' in game_obj:
     #     new_game_obj['rawg-raw'] = zlib.decompress(game_obj['rawg-raw']).decode('utf-8')
 
+    if 'my_score_1' in game_obj:
+        new_game_obj['my_score_1'] = game_obj['my_score_1']
+        new_game_obj['my_score_2'] = game_obj['my_score_2']
+
+    new_game_obj['platform'] = game_obj['platform']
     for key in ['backloggd-url', 'gamesdb-url', 'metacritics-url', 'moby-url', 'rawg-url', 'steam-url', 'wikipedia-url']:
         if key in game_obj:
             new_game_obj[key] = game_obj[key]
+
+    new_game_obj['new_title'] = game_obj['new_title']
+    new_game_obj['Top Genres'] = game_obj['Top Genres']
     return new_game_obj
+
+
+def get_similar_games(game_name: str, db, top_k=5, reject_same_franchise=True):
+    '''Compute average embedding for one game and find similar ones.'''
+    # fetch all docs for the game
+    try:
+        # source_list = ['steam-text', 'igdb-text', 'wikipedia-text', 'giantbomb-text', 'gamesdb-text',
+        #                         'rawg-text', 'mobygames-text', 'backloggd-text', 'metacritic-text']
+        source_list = ['steam-text', 'wikipedia-text']
+        source_filters = {'source': {'$in': source_list}} 
+        docs = db._collection.get(
+            where={
+                '$and': [
+                    {'game': game_name},
+                    {'source': {'$in': source_list}}
+                ]
+            },
+            include=['embeddings']
+        )
+
+        doc_franchise = db._collection.get(
+            where={
+                '$and': [
+                    {'game': game_name},
+                    {'source': {'$in': ['giantbomb-franchises', 'franchise']}}
+                ]
+            },
+            include=['documents']
+        )
+
+        franchises = set()
+        if len(doc_franchise['documents']) > 0:
+            franchises = set(doc_franchise['documents'][0].split('; '))
+            if len(doc_franchise['documents']) > 1:
+                franchises.update(set(doc_franchise['documents'][1].split('; ')))
+
+        # compute centroid embedding for this game
+        avg_vector = np.mean(docs['embeddings'], axis=0)
+
+        # query by vector directly
+        results = db.similarity_search_by_vector_with_relevance_scores(avg_vector, k=top_k, filter=source_filters)
+        
+        # Group by game, exclude self and same-franchise games
+        similar = []
+        scores = []
+        seen = {game_name.lower()}
+        for doc, score in results:
+            g = doc.metadata.get('game', '').strip()
+            if not g or g.lower() in seen:
+                continue
+            
+            if reject_same_franchise:
+                # Get this result's franchises
+                doc_franchise = db._collection.get(
+                    where={
+                        '$and': [
+                            {'game': g},
+                            {'source': {'$in': ['giantbomb-franchises', 'franchise']}}
+                        ]
+                    },
+                    include=['documents']
+                )
+
+                if len(doc_franchise['documents']) > 0:
+                    doc_franchises = set(doc_franchise['documents'][0].split('; '))
+                    if len(doc_franchise['documents']) > 1:
+                        doc_franchises.update(set(doc_franchise['documents'][1].split('; ')))
+                else:
+                    doc_franchises = set()
+
+                # Skip if shares any franchise with the target
+                if franchises and (franchises & doc_franchises):
+                    continue
+
+            similar.append(g)
+            scores.append(score)
+            seen.add(g.lower())
+            if len(similar) >= top_k:
+                break
+    except Exception as e:
+        return ['Error']
+
+    return similar, scores
+
+
+def generate_text(game_obj):
+    text_obj = dict()
+    str_obj = ''
+    if game_obj.get('steam-description', '#') != '#':
+        str_obj += 'Description: ' + game_obj['steam-description'] + '\n'
+        text_obj['Intro'] = game_obj['steam-description']
+    if game_obj.get('steam-summary', '#') != '#':
+        str_obj += 'Summary: ' + game_obj['steam-summary'] + '\n'
+    if str_obj not in ['', '#']:
+        text_obj['steam-text'] = str_obj
+    
+    if game_obj.get('metacritics-description', '#') != '#':
+        game_obj['metacritics-text'] = game_obj['metacritics-description']  + '\n'
+        if 'Intro' not in text_obj:
+            text_obj['Intro'] = game_obj['metacritics-text']
+
+    if game_obj.get('rawg-description', '#') != '#':
+        game_obj['rawg-text'] = game_obj['rawg-description'].replace('<p>', '').replace('</p>', '')  + '\n'
+    
+    str_obj = ''
+    if game_obj.get('wikipedia-summary', '#') != '#':
+        str_obj += 'Summary: ' + game_obj['wikipedia-summary'] + '\n'
+        if 'Intro' not in text_obj:
+            text_obj['Intro'] = game_obj['wikipedia-summary']
+    if game_obj.get('wikipedia-gameplay', '#') != '#':
+        str_obj += 'Gameplay: ' + game_obj['wikipedia-gameplay'] + '\n'
+    if game_obj.get('wikipedia-plot', '#') != '#':
+        str_obj += 'Plot: ' + game_obj['wikipedia-plot'] + '\n'
+    if game_obj.get('wikipedia-synopsis', '#') != '#':
+        str_obj += 'Synopsis: ' + game_obj['wikipedia-synopsis'] + '\n'
+    if str_obj not in ['', '#']:
+        text_obj['wikipedia-text'] = str_obj
+
+    str_obj = ''
+    if game_obj.get('giantbomb-intro', '#') != '#':
+        str_obj += 'Intro: ' + game_obj['giantbomb-intro'] + '\n'
+        if 'Intro' not in text_obj:
+            text_obj['Intro'] = game_obj['giantbomb-intro']
+    if game_obj.get('giantbomb-description', '#') != '#':
+        str_obj += 'Description: ' + game_obj['giantbomb-description'] + '\n'
+    if str_obj not in ['', '#']:
+        text_obj['giantbomb-text'] = str_obj
+
+    str_obj = ''
+    if game_obj.get('igdb-summary', '#') != '#':
+        str_obj += 'Summary: ' + game_obj['igdb-summary'] + '\n'
+    if game_obj.get('igdb-story', '#') != '#':
+        str_obj += 'Story: ' + game_obj['igdb-story'] + '\n'
+    if str_obj not in ['', '#']:
+        text_obj['igdb-text'] = str_obj
+
+    if game_obj.get('backloggd-description', '#') != '#':
+        text_obj['backloggd-text'] = game_obj['backloggd-description']  + '\n'
+
+    if game_obj.get('moby-description', '#') != '#':
+        text_obj['moby-text'] = game_obj['moby-description']  + '\n'
+
+    if game_obj.get('gamesdb-description', '#') != '#':
+        text_obj['gamesdb-text'] = game_obj['gamesdb-description']  + '\n'
+    
+    return text_obj
+
+
+def filter_similar_games(game_obj, all_games):
+
+    similar_games = set()
+    for key, val in game_obj.items():
+        if 'similar' in key:
+            if isinstance(val, str):
+                temp_val = val.split('; ')
+            elif isinstance(val, dict):
+                temp_val = val.keys()
+            elif isinstance(val, list) and len(val) > 0 and isinstance(val[0], str):
+                temp_val = val
+            elif isinstance(val, list) and len(val) > 0:
+                temp_val = [next(iter(d)) for d in val if isinstance(d, dict) and d]
+            else:
+                temp_val = val
+            for title in set(temp_val):
+                best_match = get_best_match(all_games, title)
+                best_title = all_games[best_match[0]].strip()
+                if best_match[1] == 1 and best_title != 'Forgotton Anne':
+                    similar_games.add(best_title)
+
+    return list(similar_games)

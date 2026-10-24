@@ -424,3 +424,162 @@ h3 { margin: 0;}
   background-color: sandybrown;
   border-radius: 6px;
 }
+
+.score-star {
+    display: inline-block;
+    font-size: 0.8em;
+    margin-left: 8px;
+    position: relative;
+    line-height: 1;
+}
+
+/* 11/10 */
+.platinum-star {
+    color: #e5e4e2;
+    text-shadow:
+        0 0 3px #ffffff,
+        0 0 8px #b9f2ff,
+        0 0 12px #7ddfff;
+}
+
+/* < 10: partially filled gold star */
+.partial-star {
+    color: #ddd;
+}
+
+.partial-star::before {
+    content: "★";
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: var(--fill);
+    overflow: hidden;
+    color: #ffd700;
+}
+
+/* 10–11: gold -> platinum */
+.split-star {
+    color: #e5e4e2;
+}
+
+.split-star::before {
+    content: "★";
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: var(--gold);
+    overflow: hidden;
+    color: #ffd700;
+}
+
+.widget-tab-2 {
+    background: rgba(255,255,255,0.1);
+    padding: 8px 12px;
+    cursor: pointer;
+    font-weight: bold;
+    border-radius: 8px;
+    white-space: nowrap;
+}
+
+.widget-tab-2.active {
+    background: rgba(255,255,255,0.3);
+    background-color: sandybrown;
+    border-radius: 6px;
+}
+
+.cover-container {
+    position: relative;
+    display: inline-block;
+    margin: 5px;
+}
+
+.cover-container img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    cursor: pointer;
+}
+
+.cover-label {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: sandybrown;
+    font-weight: bold;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 25px;
+    z-index: 1;
+}
+
+.ps { background: rgba(255, 255, 255, 0.85); color: black; }
+.ps1 { background: rgba(160, 82, 45, 0.85); color: white; }
+.ps2 { background: rgba(255, 105, 180, 0.85); color: white; }
+.ps3 { background: rgba(34, 210, 210, 0.85); color: white; }
+.psp { background: rgba(153, 153, 153, 0.85); color: white; }
+.ds3 { background: rgba(0, 0, 0, 0.85); color: white; }
+.nds { background: rgba(4, 173, 4, 0.85); color: white; }
+.ns { background: rgba(204, 0, 0, 0.85); color: white; }
+.n64 { background: rgba(220, 220, 17, 0.85); color: white; }
+.indie { background: rgba(184, 134, 11, 0.85); color: white; }
+.gba { background: rgba(255, 242, 204, 0.85); color: black; }
+.dreamcast { background: rgba(13, 208, 208, 0.85); color: white; }
+.pc { background: rgba(11, 83, 148, 0.85); color: white; }
+.gc { background: rgba(99, 19, 157, 0.85); color: white; }
+.sega { background: rgba(255, 242, 204, 0.85); color: black; }
+.snes { background: rgba(255, 242, 204, 0.85); color: black; }
+.wiiu { background: rgba(249, 97, 249, 0.85); color: black; }
+
+.my-score-row {
+    display: flex;
+    align-items: center;
+}
+
+.my-stars {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 22px;
+    white-space: nowrap;
+}
+
+.gold-stars {
+    background: linear-gradient(to right, #DAA520 var(--fill), #555 var(--fill));
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+}
+
+.platinum-star {
+    position: relative;
+    display: inline-block;
+    color: #555;
+    background: none;
+    -webkit-text-fill-color: #555;
+    filter: drop-shadow(0 0 2px rgba(0, 229, 255, 0.3));
+}
+
+.platinum-star::before {
+    content: "★";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: var(--fill);
+    overflow: hidden;
+    white-space: nowrap;
+    background: linear-gradient(135deg, #00cfe8 0%, #7b61d1 25%, #fff 40%, #e6c84c 60%, #e89535 80%, #00cfe8 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+}
+
+.my-stars { position: relative; }
+.my-stars:hover::after 
+{ 
+  content: attr(data-tooltip); position: absolute; 
+  bottom: 125%; left: 50%; transform: translateX(-50%); font-weight: bold;
+  background: rgb(228, 237, 226); color: black; padding: 8px 14px; 
+  border-radius: 6px; font-size: 16px; white-space: nowrap; z-index: 1000; 
+}

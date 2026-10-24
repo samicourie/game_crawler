@@ -8,7 +8,8 @@ import plotly.express as px
 
 all_games = list(get_mongo_collection().find({}, {'_id': 0, 'metacritics-critics': 1, 'metacritics-users': 1, 'platform': 1, 'Top Genres': 1,
                                              'steam-positive': 1, 'steam-nb-users': 1, 'hltb-main': 1, 'giantbomb-franchises': 1,
-                                             'hltb-main+': 1, 'hltb-complete': 1, 'Release Date': 1, 'title': 1, 'Retro': 1}))
+                                             'hltb-main+': 1, 'hltb-complete': 1, 'Release Date': 1, 'title': 1, 'Retro': 1,
+                                             'wikipedia-summary': 1}))
 
 
 def normalize_release_date(date_str_list):
@@ -36,13 +37,16 @@ def get_tabular_data():
             game_obj.get('hltb-main', np.nan),
             game_obj.get('hltb-main+', np.nan),
             game_obj.get('hltb-complete', np.nan),
-            game_obj.get('Top Genres', [])]
+            game_obj.get('Top Genres', []),
+            game_obj.get('wikipedia-summary', '#')],
         )
     
     games_df =  pd.DataFrame(games_list, columns = ['Title', 'Release Date', 'Platform', 'Metacritics Critics',
                                                'Metacritics Users', 'Steam Positive', 'Steam Nb Users',
-                                               'HLTB Main', 'HLTB Main+', 'HLTB Complete', 'Genres'])
+                                               'HLTB Main', 'HLTB Main+', 'HLTB Complete', 'Genres', 'Wikipedia Summary'])
     games_df['Release Date'] = pd.to_datetime(games_df['Release Date'], errors='coerce')
+    games_df['Metacritics Critics'] = pd.to_numeric(games_df['Metacritics Critics'], errors='coerce')
+    games_df['Steam Positive'] = pd.to_numeric(games_df['Steam Positive'], errors='coerce')
     return games_df
 
 # -----------------------------
@@ -68,7 +72,18 @@ with st.sidebar:
     max_date = games['Release Date'].max().to_pydatetime()  
     date_range = st.slider('Release Date Range', min_date, max_date, value=(min_date, max_date))
     games_filtered = games[(games['Release Date'] >= date_range[0]) & (games['Release Date'] <= date_range[1])]
+
+    min_meta = games['Metacritics Critics'].min()
+    max_meta = games['Metacritics Critics'].max()
+    date_range = st.slider('Metacritic Range', min_meta, max_meta, value=(min_meta, max_meta))
+    games_filtered = games[(games['Metacritics Critics'] >= date_range[0]) & (games['Metacritics Critics'] <= date_range[1])]
+
     
+    # min_steam = games['Steam Positive'].min()
+    # max_steam = games['Steam Positive'].max()
+    # date_range = st.slider('Steam Range', min_steam, max_steam, value=(min_steam, max_meta))
+    # games_filtered = games[(games['Steam Positive'] >= date_range[0]) & (games['Steam Positive'] <= date_range[1])]
+
     # Filter game platform
     platforms = sorted(games['Platform'].unique().tolist())
     selected_platforms = st.multiselect('Select Platforms', platforms, default=platforms)

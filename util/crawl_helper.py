@@ -1,4 +1,5 @@
 from crawlers.backloggd import BackloggdCrawler
+from crawlers.exophase import ExophaseCrawler
 from crawlers.gamesdb import GamesDBCrawler
 from crawlers.giantbomb import GiantbombCrawler
 from crawlers.hltb import HLTBCrawler
@@ -16,6 +17,7 @@ class CrawlHelper():
     def __init__(self):
         self.crawler_dict = {
             'backloggd': BackloggdCrawler,
+            'exophase': ExophaseCrawler,
             'gamesdb': GamesDBCrawler,
             'giantbomb': GiantbombCrawler,
             'hltb': HLTBCrawler,

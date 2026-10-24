@@ -10,7 +10,7 @@ class GamesDBCrawler(Crawler):
         super().__init__()
         self.site = 'gamesdb'
         self.details_gamesdb = 'https://gamesdb.launchbox-app.com/games/details/'
-        self.search_gamesdb = 'https://api.gamesdb.launchbox-app.com/api/search/'
+        self.search_gamesdb = 'https://gamesdb-api.launchbox-app.com/api/search/'
         self.image_base = 'https://images.launchbox-app.com//'
         self.platforms = ['Linux', 'Microsoft Xbox', 'Microsoft Xbox 360', 'Microsoft Xbox One', 'Microsoft Xbox Series X/S',
                           'Nintendo 3DS', 'Nintendo 64', 'Nintendo DS', 'Nintendo Entertainment System', 'Nintendo Game Boy',

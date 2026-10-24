@@ -1,5 +1,4 @@
-import zlib
-import json
+from pathlib import Path
 from crawlers.crawler import Crawler
 from util.utility import get_soup, get_best_match
 
@@ -8,7 +7,7 @@ class MobyCrawler(Crawler):
     def __init__(self):
         super().__init__()
         self.site = 'moby'
-        self.base_moby = 'https://www.mobygames.com/search/?q='
+        self.base_moby = 'https://www.mobygames.com/search/auto/?q='
 
     def get_url(self, title, year=0):
         temp_title = title
@@ -57,9 +56,13 @@ class MobyCrawler(Crawler):
                 'moby-success': success}
     
 
-    def get_info(self, url, score):
-        soup = get_soup(url, cloud_scrapper=True)
+    def get_info(self, url, score, is_stored=True):
+        soup = get_soup(url, is_stored=is_stored, cloud_scrapper=True)
         json_obj = {'moby-success': False}
+
+        if is_stored:
+            json_obj['moby-score'] = score
+            json_obj['moby-url'] = url
 
         try:
             if score >= self.accepted_score:
@@ -69,7 +72,7 @@ class MobyCrawler(Crawler):
                 if 'aka' in next_elem.text:
                     json_obj['moby-aliases'] = next_elem.text.split('aka:\n')[1].strip()
                     next_elem = next_elem.find_next('div')
-                json_obj['moby-id'] = url.split('/')[4]
+                json_obj['moby-id'] = soup.find('div', {'class': 'text-sm text-muted'}).text.split(': ')[1].strip()
 
                 temp_div = soup.find('div', {'class': 'info-release'})
                 temp_dl = temp_div.find('dl')
@@ -127,25 +130,32 @@ class MobyCrawler(Crawler):
                     
                 json_obj['moby-description'] = description
                 # json_obj['moby-raw'] = zlib.compress(self.get_raw_info(soup).encode('utf-8'))
-                json_obj['moby-raw'] = self.get_raw_info(soup)
+                if (Path(url).stat().st_size / 1000) < 3000:
+                    json_obj['moby-raw'] = self.get_raw_info(soup)
 
                 tags_elem = soup.find('section', {'id': 'gameGroups'})
                 tags_li = tags_elem.find_all('li')
                 json_obj['moby-tags'] = ' ; '.join([v.text.strip() for v in tags_li])
 
-                review_section = soup.find('section', {'id': 'critic-reviews'})
-                reviews_elem = json.loads(str(review_section.find('critic-reviews').attrs.get(':reviews')))
-                reviews_dict = dict()
-                for review in reviews_elem:
-                    journal = review['source']['name']
-                    if journal not in reviews_dict:
-                        reviews_dict[journal] = []
-                    reviews_dict[journal].append({'review': review['citation'], 'score': review['normalized_score']}) 
-                json_obj['moby-reviews'] = reviews_dict
+                """
+                try:
+                    reviews_elem = soup.find('critic-reviews')
+                    reviews_json = reviews_elem.get(":reviews")
+                    reviews = json.loads(reviews_json)
+                    result = []
+                    for review in reviews:
+                        result.append({
+                            "journal": review["source"]["name"],
+                            "score": review["normalized_score"],
+                            "review": review["citation"]
+                        })
+                except Exception as _:
+                    pass
+                """
 
-                images = self.get_moby_screenshots(url)
-                if images and len(images) > 0:
-                    json_obj['moby-screenshots'] = images
+                # images = self.get_moby_screenshots(url)
+                # if images and len(images) > 0:
+                    # json_obj['moby-screenshots'] = images
 
                 json_obj['moby-success'] = True
         except Exception as _:
@@ -154,8 +164,9 @@ class MobyCrawler(Crawler):
         return json_obj
 
     def get_moby_screenshots(self, url):
-        temp_url = url + '/screenshots/'
-        soup = get_soup(temp_url, cloud_scrapper=True)
+        # temp_url = url + '/screenshots/'
+        # soup = get_soup(url, cloud_scrapper=True)
+        soup = get_soup(url, is_stored=True)
         images = []
         
         sc_div = soup.find('div', {'class': 'img-holder mb'})
@@ -163,7 +174,8 @@ class MobyCrawler(Crawler):
             figures = sc_div.find_all('figure')
             try:
                 for fig in figures:
-                    images.append({'url': fig.find('img').attrs['src'].replace('.webp', '.jpg'), 'caption': fig.find('figcaption').text.strip()})
+                    # images.append({'url': fig.find('img').attrs['src'].replace('.webp', '.jpg'), 'caption': fig.find('figcaption').text.strip()})
+                    images.append({'url': fig.find('img').attrs['original-src'].replace('.webp', '.jpg'), 'caption': fig.find('figcaption').text.strip()})
             except Exception as _:
                 pass
         return images
